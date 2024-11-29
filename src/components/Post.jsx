@@ -52,7 +52,7 @@ const Posts = () => {
       title: 'Getting Started with React',
       category: 'Development',
       author: {
-        name: 'John Doe',
+        name: 'mishael Atuti',
         avatar: 'https://via.placeholder.com/40',
         role: 'Software Engineer'
       },
@@ -67,7 +67,7 @@ const Posts = () => {
       title: 'UI Design Tips',
       category: 'Design',
       author: {
-        name: 'Jane Smith',
+        name: 'vinter ',
         avatar: 'https://via.placeholder.com/40',
         role: 'UX Designer'
       },
