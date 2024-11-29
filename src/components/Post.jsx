@@ -20,6 +20,15 @@ import {
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 
+// Moringa color scheme
+const colors = {
+ primary: '#0A1F44', // Navy blue
+ secondary: '#F05A28', // Orange
+ background: '#FFF5F2', // Light peach
+ white: '#FFFFFF',
+ divider: 'rgba(240, 90, 40, 0.12)' // Semi-transparent orange
+};
+
 const Posts = () => {
  const theme = useTheme();
  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -45,26 +54,60 @@ const Posts = () => {
    <Grid container spacing={2}>
      {posts.map((post) => (
        <Grid item xs={12} key={post.id}>
-         <Card>
+         <Card sx={{ 
+           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+           '&:hover': { boxShadow: '0 4px 8px rgba(0,0,0,0.15)' },
+           transition: 'box-shadow 0.3s',
+           border: `1px solid ${colors.divider}`
+         }}>
            <CardMedia
              component="img"
-             height="140"
+             height="180"
              image={post.image}
              alt={post.title}
+             sx={{ objectFit: 'cover' }}
            />
            <CardContent>
-             <Typography variant="subtitle2" color="text.secondary">
+             <Typography 
+               variant="subtitle2" 
+               sx={{ color: colors.secondary, mb: 1 }}
+             >
                {post.date}
              </Typography>
-             <Typography variant="h6" gutterBottom>
+             <Typography 
+               variant="h6" 
+               gutterBottom
+               sx={{ color: colors.primary, fontWeight: 600 }}
+             >
                {post.title}
              </Typography>
-             <Chip label={post.category} size="small" sx={{ mb: 2 }} />
+             <Chip 
+               label={post.category} 
+               size="small" 
+               sx={{ 
+                 mb: 2,
+                 bgcolor: colors.primary,
+                 color: colors.white,
+                 fontWeight: 500
+               }} 
+             />
              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-               <IconButton size="small" color="primary">
+               <IconButton 
+                 size="small" 
+                 sx={{ 
+                   color: colors.primary,
+                   '&:hover': { bgcolor: colors.divider }
+                 }}
+               >
                  <Edit />
                </IconButton>
-               <IconButton size="small" color="error">
+               <IconButton 
+                 size="small" 
+                 sx={{ 
+                   color: '#d32f2f',
+                   '&:hover': { bgcolor: '#ffebee' }
+                 }}
+               >
                  <Delete />
                </IconButton>
              </Box>
@@ -76,37 +119,72 @@ const Posts = () => {
  );
 
  const DesktopView = () => (
-   <TableContainer component={Paper}>
+   <TableContainer 
+     component={Paper}
+     sx={{ 
+       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+       border: `1px solid ${colors.divider}`
+     }}
+   >
      <Table>
        <TableHead>
-         <TableRow sx={{ bgcolor: '#1a237e' }}>
-           <TableCell sx={{ color: 'white' }}>Date Created</TableCell>
-           <TableCell sx={{ color: 'white' }}>Image</TableCell>
-           <TableCell sx={{ color: 'white' }}>Title</TableCell>
-           <TableCell sx={{ color: 'white' }}>Category</TableCell>
-           <TableCell sx={{ color: 'white' }}>Actions</TableCell>
+         <TableRow sx={{ bgcolor: colors.primary }}>
+           <TableCell sx={{ color: colors.white, fontWeight: 600 }}>Date Created</TableCell>
+           <TableCell sx={{ color: colors.white, fontWeight: 600 }}>Image</TableCell>
+           <TableCell sx={{ color: colors.white, fontWeight: 600 }}>Title</TableCell>
+           <TableCell sx={{ color: colors.white, fontWeight: 600 }}>Category</TableCell>
+           <TableCell sx={{ color: colors.white, fontWeight: 600 }}>Actions</TableCell>
          </TableRow>
        </TableHead>
        <TableBody>
          {posts.map((post) => (
-           <TableRow key={post.id}>
-             <TableCell>{post.date}</TableCell>
+           <TableRow 
+             key={post.id}
+             sx={{ '&:hover': { bgcolor: colors.background } }}
+           >
+             <TableCell sx={{ color: colors.secondary }}>{post.date}</TableCell>
              <TableCell>
                <img 
                  src={post.image} 
                  alt={post.title} 
-                 style={{ width: 50, height: 50, objectFit: 'cover' }} 
+                 style={{ 
+                   width: 60, 
+                   height: 60, 
+                   objectFit: 'cover',
+                   borderRadius: '4px',
+                   border: `2px solid ${colors.divider}`
+                 }} 
                />
              </TableCell>
-             <TableCell>{post.title}</TableCell>
-             <TableCell>
-               <Chip label={post.category} size="small" />
+             <TableCell sx={{ color: colors.primary, fontWeight: 500 }}>
+               {post.title}
              </TableCell>
              <TableCell>
-               <IconButton color="primary">
+               <Chip 
+                 label={post.category} 
+                 size="small"
+                 sx={{ 
+                   bgcolor: colors.primary,
+                   color: colors.white,
+                   fontWeight: 500
+                 }}
+               />
+             </TableCell>
+             <TableCell>
+               <IconButton 
+                 sx={{ 
+                   color: colors.primary,
+                   '&:hover': { bgcolor: colors.divider }
+                 }}
+               >
                  <Edit />
                </IconButton>
-               <IconButton color="error">
+               <IconButton 
+                 sx={{ 
+                   color: '#d32f2f',
+                   '&:hover': { bgcolor: '#ffebee' }
+                 }}
+               >
                  <Delete />
                </IconButton>
              </TableCell>
@@ -118,7 +196,17 @@ const Posts = () => {
  );
 
  return (
-   <Box p={2}>
+   <Box p={2} sx={{ bgcolor: colors.background, minHeight: '100vh' }}>
+     <Typography 
+       variant="h4" 
+       sx={{ 
+         color: colors.primary,
+         mb: 3,
+         fontWeight: 600
+       }}
+     >
+       Posts
+     </Typography>
      {isMobile ? <MobileView /> : <DesktopView />}
    </Box>
  );
