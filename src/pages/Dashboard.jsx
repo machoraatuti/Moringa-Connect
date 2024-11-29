@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Divider } from '@mui/material';
 import { Dashboard, Person, Group, Article, ExitToApp, AccountCircle } from '@mui/icons-material';
 import Admin from '../components/Dashboard';
+import Profile from '../components/profile';
+import Posts from '../components/Post';
+import Groups from '../components/Groups';
+import Users from '../components/Users';
 
 const drawerWidth = 240;
 
@@ -45,7 +49,7 @@ const AdminDashboard = () => {
        <List>
          {sidebarItems.map((item) => (
            <ListItem 
-             button 
+            component="button" 
              key={item.name}
              onClick={() => handleTabChange(item.name)}
              sx={{
@@ -59,7 +63,7 @@ const AdminDashboard = () => {
          ))}
          <Divider sx={{ my: 2, bgcolor: 'rgba(255,255,255,0.12)' }} />
          <ListItem 
-           button 
+          component="button"
            onClick={handleSignOut}
            sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } }}
          >
@@ -75,10 +79,12 @@ const AdminDashboard = () => {
            {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)} Content
          </Typography>
         {selectedTab === 'dashboard' && <Admin/>}
+         {selectedTab === 'profile' && <Profile/>}
+         {selectedTab === 'posts' && <Posts/>}
+           {selectedTab === 'groups' && <Groups/>}
+            {selectedTab === 'users' && <Users/>}
         
-         <Typography variant="h5">
-           {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)} Content
-         </Typography>
+         
        </Box>
      </Box>
    </Box>
