@@ -1,15 +1,9 @@
 
-import './App.css';
-import AdminDashboard from './pages/Dashboard';
-
+// App.js
+import AdminDashboard from './pages/Dashboard.jsx';  // 
 
 function App() {
-  return (
-    <>
-   <AdminDashboard />
-
-    </>
-  );
+  return <AdminDashboard />;
 }
 
 export default App;
