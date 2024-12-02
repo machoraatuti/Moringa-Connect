@@ -1,4 +1,4 @@
-import CreatePost from './components/CreatePost.jsx';
+import CreatePost from './components/createPost.jsx';
 
 
 function App() {
