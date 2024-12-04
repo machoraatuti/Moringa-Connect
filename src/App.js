@@ -1,10 +1,10 @@
 
 // App.js
-//import AdminDashboard from './pages/Dashboard.jsx'; 
-import PlatformLanding from './components/Landing.jsx';
+import AdminDashboard from './pages/Dashboard.jsx'; 
+
 
 function App() {
-  return <PlatformLanding />;
+  return <AdminDashboard/>;
 }
 
 export default App;
