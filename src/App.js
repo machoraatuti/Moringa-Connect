@@ -1,17 +1,7 @@
-import CreatePost from './components/CreatePost.jsx';
-
-<<<<<<< HEAD
-// App.js
-import AdminDashboard from './pages/Dashboard.jsx'; 
-
+import PlatformLanding from './components/Landing.jsx';
 
 function App() {
-  return <AdminDashboard/>;
-=======
-
-function App() {
-  return <CreatePost />;
->>>>>>> origin/main
+  return <PlatformLanding />;
 }
 
-export default App;
+export default App;  
