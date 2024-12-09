@@ -1,47 +1,27 @@
 import React, { useState } from 'react';
 import { 
-  Box,
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Paper,
-  IconButton,
-  TextField,
-  Tooltip,
-  Typography,
-  Button,
-  Chip,
-  Card,
-  CardContent,
-  Divider,
-   Grid
+  Box, TableContainer, Table, TableHead, TableBody,
+  TableRow, TableCell, Paper, IconButton, TextField,
+  Tooltip, Typography, Button, Chip, Card, CardContent,
+  Grid
 } from '@mui/material';
 import { 
-  Delete, 
-  Edit, 
-  Visibility, 
-  Group, 
-  Add,
-  School,
-  Work,
-  Event,
-  Chat
+  Delete, Edit, Visibility, Group, Add,
+  Work, Event, Chat
 } from '@mui/icons-material';
+import CreateGroup from '../components/CreateGroup';
 
-// Moringa color scheme
 const colors = {
-  primary: '#0A1F44', // Navy blue
-  secondary: '#F05A28', // Orange
-  background: '#FFF5F2', // Light peach
+  primary: '#0A1F44',
+  secondary: '#F05A28',
+  background: '#FFF5F2',
   white: '#FFFFFF',
   divider: 'rgba(240, 90, 40, 0.12)'
 };
 
 const Groups = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [openCreateGroup, setOpenCreateGroup] = useState(false);
   
   const groups = [
     {
@@ -93,6 +73,7 @@ const Groups = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
+          onClick={() => setOpenCreateGroup(true)}
           sx={{
             bgcolor: colors.secondary,
             '&:hover': { bgcolor: colors.primary },
@@ -103,7 +84,6 @@ const Groups = () => {
         </Button>
       </Box>
 
-      {/* Stats Cards */}
       <Box mb={4}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={3}>
@@ -115,7 +95,6 @@ const Groups = () => {
               </CardContent>
             </Card>
           </Grid>
-          {/* Add more stat cards as needed */}
         </Grid>
       </Box>
 
@@ -222,6 +201,11 @@ const Groups = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <CreateGroup 
+        open={openCreateGroup} 
+        onClose={() => setOpenCreateGroup(false)} 
+      />
     </Box>
   );
 };

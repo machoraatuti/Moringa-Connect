@@ -1,36 +1,22 @@
+// CreatePost.jsx
 import React, { useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Box,
-  IconButton,
-  Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip
+  Box, Typography, TextField, Button, Select, MenuItem,
+  IconButton
 } from '@mui/material';
 import {
-  Close,
-  AddPhotoAlternate,
-  AttachFile,
-  Delete
+  Close, AddPhotoAlternate, Delete
 } from '@mui/icons-material';
 
 const colors = {
   primary: '#0A1F44',
-  secondary: '#F05A28', 
-  background: '#FFF5F2',
+  secondary: '#F05A28',
+  background: '#FFF5F2', 
   white: '#FFFFFF',
   divider: 'rgba(240, 90, 40, 0.12)'
 };
 
-const CreatePost = () => {
+const CreatePost = ({ onClose }) => {
   const [postData, setPostData] = useState({
     title: '',
     content: '',
@@ -38,8 +24,6 @@ const CreatePost = () => {
     tags: [],
     image: null
   });
-
-  const [tagInput, setTagInput] = useState('');
 
   const categories = [
     'Technology',
@@ -61,14 +45,7 @@ const CreatePost = () => {
   };
 
   return (
-    <Box sx={{ 
-      maxWidth: '800px', 
-      margin: '20px auto',
-      p: 3,
-      bgcolor: colors.white,
-      borderRadius: '12px',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
-    }}>
+    <Box sx={{ maxWidth: '800px', margin: '20px auto', p: 3 }}>
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between',
@@ -78,14 +55,17 @@ const CreatePost = () => {
         <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>
           Create Post
         </Typography>
+        <IconButton onClick={onClose}>
+          <Close />
+        </IconButton>
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Title */}
         <TextField
           label="Post Title"
           fullWidth
-          variant="outlined"
+          value={postData.title}
+          onChange={(e) => setPostData({ ...postData, title: e.target.value })}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': { borderColor: colors.secondary },
@@ -94,57 +74,33 @@ const CreatePost = () => {
           }}
         />
 
-        {/* Category */}
-        <FormControl fullWidth>
-          <InputLabel>Category</InputLabel>
-          <Select
-            label="Category"
-          >
-            {categories.map((category) => (
-              <MenuItem key={category} value={category}>{category}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Select
+          value={postData.category}
+          onChange={(e) => setPostData({ ...postData, category: e.target.value })}
+          displayEmpty
+          renderValue={selected => selected || "Select Category"}
+        >
+          {categories.map((category) => (
+            <MenuItem key={category} value={category}>{category}</MenuItem>
+          ))}
+        </Select>
 
-        {/* Content */}
         <TextField
           label="Write your post..."
           multiline
           rows={6}
           fullWidth
-          variant="outlined"
+          value={postData.content}
+          onChange={(e) => setPostData({ ...postData, content: e.target.value })}
         />
 
-        {/* Tags */}
-        <Box>
-          <TextField
-            label="Add tags (Press Enter)"
-            fullWidth
-            variant="outlined"
-            sx={{ mb: 2 }}
-          />
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            <Chip
-              label="Example Tag"
-              onDelete={() => {}}
-              sx={{
-                bgcolor: colors.divider,
-                '& .MuiChip-deleteIcon': {
-                  color: colors.primary,
-                  '&:hover': { color: colors.secondary }
-                }
-              }}
-            />
-          </Box>
-        </Box>
-
-        {/* Image Upload */}
         <Box sx={{ mt: 2 }}>
           <input
             type="file"
             accept="image/*"
             id="image-upload"
             hidden
+            onChange={handleImageUpload}
           />
           <Button
             component="label"
@@ -162,12 +118,33 @@ const CreatePost = () => {
           >
             Add Image
           </Button>
+          {postData.image && (
+            <Box sx={{ mt: 2, position: 'relative', width: 'fit-content' }}>
+              <img 
+                src={postData.image} 
+                alt="Preview" 
+                style={{ maxWidth: '200px', borderRadius: '8px' }} 
+              />
+              <IconButton
+                onClick={() => setPostData({ ...postData, image: null })}
+                sx={{ 
+                  position: 'absolute', 
+                  top: -10, 
+                  right: -10,
+                  bgcolor: colors.white,
+                  '&:hover': { bgcolor: colors.divider }
+                }}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
+          )}
         </Box>
 
-        {/* Action Buttons */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
           <Button 
             variant="outlined"
+            onClick={onClose}
             sx={{ 
               color: colors.primary,
               borderColor: colors.primary,
