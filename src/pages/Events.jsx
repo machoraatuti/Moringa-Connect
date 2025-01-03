@@ -110,10 +110,10 @@ const Events = () => {
       <Box
         sx={{
           position: "relative",
-          width: "100%", // Match the width of the AppBar
-          height: "200px", // Adjust height to create proportional design
+          width: "100%",
+          height: "200px",
           overflow: "hidden",
-          marginTop: 0, // Ensure no gap between the navbar and hero section
+          marginTop: 0,
         }}
       >
         {/* Blurred Background */}
@@ -124,8 +124,7 @@ const Events = () => {
             left: 0,
             width: "100%",
             height: "100%",
-            backgroundImage: `url(${require("../assets/images/hero-background.jpg")})`, // Replace with your background image path
-            backgroundSize: "cover",
+            backgroundImage: `url(${require("../assets/images/hero-background.jpg")})`,
             backgroundPosition: "center",
             filter: "blur(8px)", // Apply blur effect
             zIndex: 1,
