@@ -20,6 +20,7 @@ import {
   Event,
   Close,
 } from "@mui/icons-material";
+import Footer from "./Footer";
 
 const moringaColors = {
   primary: "#0A1F44",
@@ -41,9 +42,15 @@ const Layout = () => {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh", // Full viewport height
+      }}
+    >
       {/* AppBar for Hamburger Menu */}
-      <AppBar position="static" sx={{ bgcolor: moringaColors.primary }}>
+      <AppBar position="fixed" sx={{ bgcolor: moringaColors.primary }}>
         <Toolbar>
           <IconButton
             edge="start"
@@ -94,7 +101,7 @@ const Layout = () => {
               key={item.text}
               onClick={() => {
                 navigate(item.path);
-                setIsDrawerOpen(false); // Close drawer on navigation
+                setIsDrawerOpen(false);
               }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
@@ -111,10 +118,14 @@ const Layout = () => {
           flexGrow: 1,
           p: 3,
           bgcolor: moringaColors.background,
+          mt: "64px",
         }}
       >
         <Outlet />
       </Box>
+
+      {/* Footer */}
+      <Footer />
     </Box>
   );
 };
