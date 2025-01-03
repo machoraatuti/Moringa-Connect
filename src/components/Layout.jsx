@@ -1,51 +1,101 @@
-import { Outlet, useNavigate } from 'react-router-dom';
-import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import { Group, Article, Person } from '@mui/icons-material';
+import React, { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Box,
+} from "@mui/material";
+import {
+  Menu,
+  Group,
+  Article,
+  Person,
+  Event,
+  Close,
+} from "@mui/icons-material";
 
 const moringaColors = {
-  primary: '#0A1F44',    
-  secondary: '#F05A28',  
-  background: '#FFF5F2', 
-  white: '#FFFFFF',      
-  divider: 'rgba(240, 90, 40, 0.12)'
+  primary: "#0A1F44",
+  secondary: "#F05A28",
+  background: "#FFF5F2",
+  white: "#FFFFFF",
+  divider: "rgba(240, 90, 40, 0.12)",
 };
 
 const Layout = () => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
-  
+
   const menuItems = [
-    { text: 'Groups', icon: <Group />, path: '/app/groups' },
-    { text: 'Posts', icon: <Article />, path: '/app/posts' },
-    { text: 'Profile', icon: <Person />, path: '/app/profile' }
+    { text: "Profile", icon: <Person />, path: "/app/profile" },
+    { text: "Groups", icon: <Group />, path: "/app/groups" },
+    { text: "Posts", icon: <Article />, path: "/app/posts" },
+    { text: "Events", icon: <Event />, path: "/app/events" },
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      {/* AppBar for Hamburger Menu */}
+      <AppBar position="static" sx={{ bgcolor: moringaColors.primary }}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={() => setIsDrawerOpen(true)}
+          >
+            <Menu />
+          </IconButton>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, color: moringaColors.white }}
+          >
+            Moringa Connect
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      {/* Drawer for Navigation */}
       <Drawer
-        variant="permanent"
+        anchor="left"
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
         sx={{
-          width: 240,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+          "& .MuiDrawer-paper": {
             width: 240,
-            boxSizing: 'border-box',
+            boxSizing: "border-box",
             bgcolor: moringaColors.primary,
             color: moringaColors.white,
-            '& .MuiListItemIcon-root': {
-              color: moringaColors.white
+            "& .MuiListItemIcon-root": {
+              color: moringaColors.white,
             },
-            '& .MuiListItem-root:hover': {
-              bgcolor: moringaColors.divider
-            }
-          }
+            "& .MuiListItem-root:hover": {
+              bgcolor: moringaColors.divider,
+            },
+          },
         }}
       >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", p: 1 }}>
+          <IconButton onClick={() => setIsDrawerOpen(false)} color="inherit">
+            <Close />
+          </IconButton>
+        </Box>
         <List>
           {menuItems.map((item) => (
             <ListItem
               button
               key={item.text}
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                navigate(item.path);
+                setIsDrawerOpen(false); // Close drawer on navigation
+              }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
@@ -54,12 +104,13 @@ const Layout = () => {
         </List>
       </Drawer>
 
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
           p: 3,
-          bgcolor: moringaColors.background 
+          bgcolor: moringaColors.background,
         }}
       >
         <Outlet />
