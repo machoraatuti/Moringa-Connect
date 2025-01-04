@@ -1,144 +1,174 @@
 import React, { useState } from 'react';
-import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Divider } from '@mui/material';
-import { Dashboard, Person, Group, Article, ExitToApp, AccountCircle } from '@mui/icons-material';
+import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Divider, Paper } from '@mui/material';
+import { Dashboard, Person, Group, Article, ExitToApp, AccountCircle, Event } from '@mui/icons-material';
 import Admin from '../components/Dashboard';
-import Profile from '../components/profile';
-import Posts from '../components/Post';
-import Groups from '../components/Groups';
+import Profile from '../pages/profile';
+import Posts from '../pages/Post';
+import Groups from '../pages/Groups';
 import Users from '../components/Users';
+import Events from '../pages/Events';
 
 const drawerWidth = 240;
 
-// Moringa color scheme
 const colors = {
-  primary: '#0A1F44', // Navy blue
-  secondary: '#F05A28', // Orange
-  background: '#FFF5F2', // Light peach
-  white: '#FFFFFF',
-  divider: 'rgba(240, 90, 40, 0.12)' // Semi-transparent orange
+ primary: '#1A237E',
+ secondary: '#FF5722',
+ background: '#F8F9FA',
+ white: '#FFFFFF',
+ divider: 'rgba(255, 87, 34, 0.12)',
+ hover: 'rgba(255, 87, 34, 0.15)'
 };
 
 const AdminDashboard = () => {
-  const [selectedTab, setSelectedTab] = useState('dashboard');
+ const [selectedTab, setSelectedTab] = useState('dashboard');
 
-  const sidebarItems = [
-    { name: 'dashboard', icon: <Dashboard />, label: 'Dashboard' },
-    { name: 'profile', icon: <AccountCircle />, label: 'Profile' },
-    { name: 'posts', icon: <Article />, label: 'Posts' },
-    { name: 'groups', icon: <Group />, label: 'Groups' },
-    { name: 'users', icon: <Person />, label: 'Users' }
-  ];
+ const sidebarItems = [
+   { name: 'dashboard', icon: <Dashboard />, label: 'Dashboard' },
+   { name: 'profile', icon: <AccountCircle />, label: 'Profile' },
+   { name: 'posts', icon: <Article />, label: 'Posts' },
+   { name: 'groups', icon: <Group />, label: 'Groups' },
+   { name: 'users', icon: <Person />, label: 'Users' },
+   { name: 'events', icon: <Event />, label: 'Events' }
+ ];
 
-  const handleTabChange = (tabName) => {
-    setSelectedTab(tabName);
-  };
+ const handleTabChange = (tabName) => {
+   setSelectedTab(tabName);
+ };
 
-  const handleSignOut = () => {
-    console.log('Signing out...');
-  };
+ const handleSignOut = () => {
+   console.log('Signing out...');
+ };
 
-  return (
-    <Box sx={{ display: 'flex', bgcolor: colors.background, minHeight: '100vh' }}>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            bgcolor: colors.primary,
-            color: colors.white,
-            borderRight: `1px solid ${colors.divider}`
-          },
-        }}
-      >
-        <Box sx={{ 
-          p: 2, 
-          bgcolor: colors.secondary,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <Typography variant="h6" sx={{ color: colors.white }}>
-            Admin Panel
-          </Typography>
-        </Box>
-        <Divider sx={{ bgcolor: colors.divider }} />
-        <List>
-          {sidebarItems.map((item) => (
-            <ListItem 
-              component="button" 
-              key={item.name}
-              onClick={() => handleTabChange(item.name)}
-              sx={{
-                bgcolor: selectedTab === item.name ? colors.secondary : 'transparent',
-                color: colors.white,
-                '&:hover': { 
-                  bgcolor: selectedTab === item.name ? colors.secondary : 'rgba(240, 90, 40, 0.08)'
-                },
-                transition: 'background-color 0.3s',
-                border: 'none',
-                width: '100%',
-                textAlign: 'left',
-                padding: '12px 16px'
-              }}
-            >
-              <ListItemIcon sx={{ color: colors.white }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItem>
-          ))}
-          <Divider sx={{ my: 2, bgcolor: colors.divider }} />
-          <ListItem 
-            component="button"
-            onClick={handleSignOut}
-            sx={{ 
-              color: colors.white,
-              '&:hover': { bgcolor: 'rgba(240, 90, 40, 0.08)' },
-              border: 'none',
-              width: '100%',
-              textAlign: 'left',
-              padding: '12px 16px'
-            }}
-          >
-            <ListItemIcon sx={{ color: colors.white }}>
-              <ExitToApp />
-            </ListItemIcon>
-            <ListItemText primary="Sign Out" />
-          </ListItem>
-        </List>
-      </Drawer>
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
-          p: 3,
-          bgcolor: colors.background,
-          minHeight: '100vh'
-        }}
-      >
-        <Box sx={{ p: 3 }}>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              color: colors.primary,
-              mb: 3,
-              fontWeight: 600 
-            }}
-          >
-            {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}
-          </Typography>
-          {selectedTab === 'dashboard' && <Admin />}
-          {selectedTab === 'profile' && <Profile />}
-          {selectedTab === 'posts' && <Posts />}
-          {selectedTab === 'groups' && <Groups />}
-          {selectedTab === 'users' && <Users />}
-        </Box>
-      </Box>
-    </Box>
-  );
+ return (
+   <Box sx={{ display: 'flex', bgcolor: colors.background, minHeight: '100vh' }}>
+     <Drawer
+       variant="permanent"
+       sx={{
+         width: drawerWidth,
+         flexShrink: 0,
+         '& .MuiDrawer-paper': {
+           width: drawerWidth,
+           boxSizing: 'border-box',
+           bgcolor: colors.primary,
+           color: colors.white,
+           borderRight: 'none',
+           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+           borderRadius: '0 16px 16px 0'
+         },
+       }}
+     >
+       <Paper
+         elevation={0}
+         sx={{ 
+           p: 2, 
+           bgcolor: colors.secondary,
+           display: 'flex',
+           alignItems: 'center',
+           justifyContent: 'center',
+           borderRadius: '0 16px 0 0'
+         }}
+       >
+         <Typography variant="h6" sx={{ color: colors.white, fontWeight: 600 }}>
+           Admin Panel
+         </Typography>
+       </Paper>
+       <Divider sx={{ bgcolor: colors.divider }} />
+       <List sx={{ px: 1 }}>
+         {sidebarItems.map((item) => (
+           <ListItem 
+             component="button" 
+             key={item.name}
+             onClick={() => handleTabChange(item.name)}
+             sx={{
+               bgcolor: selectedTab === item.name ? colors.secondary : 'transparent',
+               color: colors.white,
+               borderRadius: '8px',
+               mb: 1,
+               '&:hover': { 
+                 bgcolor: selectedTab === item.name ? colors.secondary : colors.hover,
+                 transform: 'translateX(4px)'
+               },
+               transition: 'all 0.3s ease',
+               border: 'none',
+               width: '100%',
+               textAlign: 'left',
+               padding: '12px 16px'
+             }}
+           >
+             <ListItemIcon sx={{ color: colors.white, minWidth: '40px' }}>
+               {item.icon}
+             </ListItemIcon>
+             <ListItemText 
+               primary={item.label}
+               primaryTypographyProps={{
+                 fontWeight: selectedTab === item.name ? 600 : 400
+               }}
+             />
+           </ListItem>
+         ))}
+         <Divider sx={{ my: 2, bgcolor: colors.divider }} />
+         <ListItem 
+           component="button"
+           onClick={handleSignOut}
+           sx={{ 
+             color: colors.white,
+             borderRadius: '8px',
+             '&:hover': { 
+               bgcolor: colors.hover,
+               transform: 'translateX(4px)'
+             },
+             transition: 'all 0.3s ease',
+             border: 'none',
+             width: '100%',
+             textAlign: 'left',
+             padding: '12px 16px'
+           }}
+         >
+           <ListItemIcon sx={{ color: colors.white, minWidth: '40px' }}>
+             <ExitToApp />
+           </ListItemIcon>
+           <ListItemText primary="Sign Out" />
+         </ListItem>
+       </List>
+     </Drawer>
+     <Box 
+       component="main" 
+       sx={{ 
+         flexGrow: 1,
+         p: 4,
+         bgcolor: colors.background,
+         minHeight: '100vh'
+       }}
+     >
+       <Paper
+         elevation={2}
+         sx={{ 
+           p: 4,
+           borderRadius: '16px',
+           bgcolor: colors.white,
+           minHeight: 'calc(100vh - 64px)'
+         }}
+       >
+         <Typography 
+           variant="h5" 
+           sx={{ 
+             color: colors.primary,
+             mb: 4,
+             fontWeight: 600 
+           }}
+         >
+           {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}
+         </Typography>
+         {selectedTab === 'dashboard' && <Admin />}
+         {selectedTab === 'profile' && <Profile />}
+         {selectedTab === 'posts' && <Posts />}
+         {selectedTab === 'groups' && <Groups />}
+         {selectedTab === 'users' && <Users />}
+         {selectedTab === 'events' && <Events />}
+       </Paper>
+     </Box>
+   </Box>
+ );
 };
 
 export default AdminDashboard;
