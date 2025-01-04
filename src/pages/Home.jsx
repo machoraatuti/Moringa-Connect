@@ -286,7 +286,7 @@ const Home = () => {
         </Typography>
         <Button
           variant="contained"
-          href="/app/register"
+          href="/app/profile"
           sx={{
             bgcolor: moringaColors.secondary,
             "&:hover": { bgcolor: "rgba(255, 255, 255, 0.8)" },
