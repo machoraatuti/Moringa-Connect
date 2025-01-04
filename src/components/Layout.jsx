@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../Features/auth/authSlice';
 import {
   AppBar,
   Toolbar,
@@ -12,6 +14,7 @@ import {
   Typography,
   Box,
   useMediaQuery,
+  Divider,
 } from "@mui/material";
 import {
   Home,
@@ -21,6 +24,7 @@ import {
   Event,
   Menu,
   Close,
+  ExitToApp,
 } from "@mui/icons-material";
 import Footer from "./Footer";
 
@@ -38,7 +42,24 @@ const moringaColors = {
 const Layout = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const isLargeScreen = useMediaQuery("(min-width: 900px)");
+  const { isAdmin, isAuthenticated } = useSelector(state => state.auth);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSignOut = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const menuItems = [
     { text: "Home", icon: <Home />, path: "/app/home" },
@@ -47,6 +68,18 @@ const Layout = () => {
     { text: "Events", icon: <Event />, path: "/app/events" },
   ];
 
+  const handleProfileClick = () => {
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/app/profile");
+    }
+  };
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <Box
       sx={{
@@ -54,10 +87,9 @@ const Layout = () => {
         flexDirection: "column",
         minHeight: "100vh",
         width: "100%",
-        overflowX: "hidden", // Prevent horizontal scrollbars
+        overflowX: "hidden",
       }}
     >
-      {/* AppBar */}
       <AppBar
         position="fixed"
         sx={{
@@ -72,7 +104,6 @@ const Layout = () => {
             justifyContent: isLargeScreen ? "space-between" : "flex-start",
           }}
         >
-          {/* Logo */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <img
               src={moringaLogo}
@@ -90,9 +121,8 @@ const Layout = () => {
             </Typography>
           </Box>
 
-          {/* Menu for Larger Screens */}
           {isLargeScreen && (
-            <Box sx={{ display: "flex", gap: 3 }}>
+            <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
               {menuItems.map((item) => (
                 <Typography
                   key={item.text}
@@ -108,10 +138,19 @@ const Layout = () => {
                   {item.text}
                 </Typography>
               ))}
+              {/* Sign Out Button for large screens */}
+              <IconButton
+                onClick={handleSignOut}
+                sx={{
+                  color: moringaColors.primary,
+                  "&:hover": { color: moringaColors.secondary },
+                }}
+              >
+                <ExitToApp />
+              </IconButton>
             </Box>
           )}
 
-          {/* Hamburger Menu for Smaller Screens */}
           {!isLargeScreen && (
             <IconButton
               edge="start"
@@ -126,11 +165,10 @@ const Layout = () => {
             </IconButton>
           )}
 
-          {/* Profile Icon (Always Visible) */}
           <IconButton
             edge="end"
             color="inherit"
-            onClick={() => navigate("/app/profile")}
+            onClick={handleProfileClick}
             sx={{
               color: moringaColors.primary,
             }}
@@ -140,7 +178,6 @@ const Layout = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer for Navigation */}
       <Drawer
         anchor="left"
         open={isDrawerOpen}
@@ -179,15 +216,25 @@ const Layout = () => {
               <ListItemText primary={item.text} />
             </ListItem>
           ))}
+          <Divider sx={{ my: 2, bgcolor: moringaColors.divider }} />
+          {/* Sign Out Button in drawer */}
+          <ListItem
+            button
+            onClick={handleSignOut}
+          >
+            <ListItemIcon>
+              <ExitToApp />
+            </ListItemIcon>
+            <ListItemText primary="Sign Out" />
+          </ListItem>
         </List>
       </Drawer>
 
-      {/* Main Content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 0, // Remove padding for full-width hero
+          p: 0,
           bgcolor: moringaColors.background,
           mt: "64px",
         }}
@@ -195,7 +242,6 @@ const Layout = () => {
         <Outlet />
       </Box>
 
-      {/* Footer */}
       <Footer />
     </Box>
   );
