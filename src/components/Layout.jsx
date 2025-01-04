@@ -13,6 +13,7 @@ import {
   Box,
 } from "@mui/material";
 import {
+  Home,
   Menu,
   Group,
   Article,
@@ -35,6 +36,7 @@ const Layout = () => {
   const navigate = useNavigate();
 
   const menuItems = [
+    { text: "Home", icon: <Home />, path: "/app/home" },
     { text: "Profile", icon: <Person />, path: "/app/profile" },
     { text: "Groups", icon: <Group />, path: "/app/groups" },
     { text: "Posts", icon: <Article />, path: "/app/posts" },

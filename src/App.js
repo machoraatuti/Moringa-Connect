@@ -12,6 +12,7 @@ import Groups from "./pages/Groups";
 import Posts from "./pages/Post";
 import Profile from "./pages/profile";
 import Events from "./pages/Events";
+import Home from "./pages/Home"; // Import the Home component
 
 function App() {
   return (
@@ -20,9 +21,8 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          {/* Redirect root to /app/groups */}
-          <Route path="/" element={<Navigate to="/app/groups" replace />} />
-
+          {/* Landing Page Route */}
+          <Route path="/" element={<Home />} /> {/* Home is the landing page */}
           {/* Main app layout */}
           <Route path="/app" element={<Layout />}>
             <Route index element={<Navigate to="/app/groups" replace />} />
@@ -31,9 +31,8 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="events" element={<Events />} />
           </Route>
-
           {/* Catch-all redirect */}
-          <Route path="*" element={<Navigate to="/app/groups" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
