@@ -1,195 +1,82 @@
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Box,
-  IconButton,
-  Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip
-} from '@mui/material';
-import {
-  Close,
-  AddPhotoAlternate,
-  AttachFile,
-  Delete
-} from '@mui/icons-material';
+import { Box, TextField, Button, Typography, MenuItem, Select } from '@mui/material';
 
-const colors = {
-  primary: '#0A1F44',
-  secondary: '#F05A28', 
-  background: '#FFF5F2',
-  white: '#FFFFFF',
-  divider: 'rgba(240, 90, 40, 0.12)'
-};
+const categories = ['Development', 'Design', 'Career', 'Events'];
 
-const CreatePost = () => {
-  const [postData, setPostData] = useState({
-    title: '',
-    content: '',
-    category: '',
-    tags: [],
-    image: null
-  });
+const CreatePost = ({ onAddPost }) => {
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
+  const [author, setAuthor] = useState('');
+  const [image, setImage] = useState('');
 
-  const [tagInput, setTagInput] = useState('');
-
-  const categories = [
-    'Technology',
-    'Career',
-    'Education',
-    'Events',
-    'Projects',
-    'Other'
-  ];
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setPostData({
-        ...postData,
-        image: URL.createObjectURL(file)
-      });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (title && category && author) {
+      const newPost = {
+        id: Date.now(),
+        title,
+        category,
+        author: {
+          name: author,
+          avatar: `https://ui-avatars.com/api/?name=${author}&background=random`,
+          role: 'User'
+        },
+        date: new Date().toISOString().split('T')[0],
+        image: image || 'https://via.placeholder.com/150',
+        likes: 0,
+        comments: 0,
+        views: 0
+      };
+      onAddPost(newPost);
+      setTitle('');
+      setCategory('');
+      setAuthor('');
+      setImage('');
     }
   };
 
   return (
-    <Box sx={{ 
-      maxWidth: '800px', 
-      margin: '20px auto',
-      p: 3,
-      bgcolor: colors.white,
-      borderRadius: '12px',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
-    }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        mb: 3
-      }}>
-        <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>
-          Create Post
-        </Typography>
-      </Box>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Title */}
+    <Box sx={{ p: 3, bgcolor: '#FFF5F2', borderRadius: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Create a New Post</Typography>
+      <form onSubmit={handleSubmit}>
         <TextField
-          label="Post Title"
+          label="Title"
           fullWidth
           variant="outlined"
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              '&:hover fieldset': { borderColor: colors.secondary },
-              '&.Mui-focused fieldset': { borderColor: colors.secondary }
-            }
-          }}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          sx={{ mb: 2 }}
         />
-
-        {/* Category */}
-        <FormControl fullWidth>
-          <InputLabel>Category</InputLabel>
-          <Select
-            label="Category"
-          >
-            {categories.map((category) => (
-              <MenuItem key={category} value={category}>{category}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Content */}
+        <Select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          displayEmpty
+          fullWidth
+          sx={{ mb: 2 }}
+        >
+          <MenuItem value="" disabled>Select Category</MenuItem>
+          {categories.map((cat) => (
+            <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+          ))}
+        </Select>
         <TextField
-          label="Write your post..."
-          multiline
-          rows={6}
+          label="Author Name"
           fullWidth
           variant="outlined"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          sx={{ mb: 2 }}
         />
-
-        {/* Tags */}
-        <Box>
-          <TextField
-            label="Add tags (Press Enter)"
-            fullWidth
-            variant="outlined"
-            sx={{ mb: 2 }}
-          />
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            <Chip
-              label="Example Tag"
-              onDelete={() => {}}
-              sx={{
-                bgcolor: colors.divider,
-                '& .MuiChip-deleteIcon': {
-                  color: colors.primary,
-                  '&:hover': { color: colors.secondary }
-                }
-              }}
-            />
-          </Box>
-        </Box>
-
-        {/* Image Upload */}
-        <Box sx={{ mt: 2 }}>
-          <input
-            type="file"
-            accept="image/*"
-            id="image-upload"
-            hidden
-          />
-          <Button
-            component="label"
-            htmlFor="image-upload"
-            startIcon={<AddPhotoAlternate />}
-            variant="outlined"
-            sx={{
-              borderColor: colors.divider,
-              color: colors.primary,
-              '&:hover': {
-                borderColor: colors.secondary,
-                bgcolor: colors.divider
-              }
-            }}
-          >
-            Add Image
-          </Button>
-        </Box>
-
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
-          <Button 
-            variant="outlined"
-            sx={{ 
-              color: colors.primary,
-              borderColor: colors.primary,
-              '&:hover': {
-                borderColor: colors.primary,
-                bgcolor: colors.divider
-              }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            sx={{
-              bgcolor: colors.secondary,
-              '&:hover': { bgcolor: colors.primary }
-            }}
-          >
-            Publish Post
-          </Button>
-        </Box>
-      </Box>
+        <TextField
+          label="Image URL"
+          fullWidth
+          variant="outlined"
+          value={image}
+          onChange={(e) => setImage(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+        <Button type="submit" variant="contained" color="primary" fullWidth>Create Post</Button>
+      </form>
     </Box>
   );
 };

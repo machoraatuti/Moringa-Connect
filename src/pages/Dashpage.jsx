@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Divider } from '@mui/material';
 import { Dashboard, Person, Group, Article, ExitToApp, AccountCircle } from '@mui/icons-material';
 import Admin from '../components/Dashboard';
-import Profile from '../components/profile';
-import Posts from '../components/Post';
-import Groups from '../components/Groups';
+import Profile from './profile';
+import Posts from './Post';
+import Groups from './Groups';
 import Users from '../components/Users';
 
 const drawerWidth = 240;
@@ -18,7 +18,7 @@ const colors = {
   divider: 'rgba(240, 90, 40, 0.12)' // Semi-transparent orange
 };
 
-const AdminDashboard = () => {
+const Dashpage = () => {
   const [selectedTab, setSelectedTab] = useState('dashboard');
 
   const sidebarItems = [
@@ -141,4 +141,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default Dashpage;
