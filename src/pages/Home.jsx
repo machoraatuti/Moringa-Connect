@@ -27,7 +27,6 @@ import {
   Work,
   Star,
 } from "@mui/icons-material";
-import Footer from "../components/Footer";
 
 const moringaColors = {
   primary: "#0A1F44",
@@ -57,7 +56,7 @@ const Home = () => {
         sx={{
           position: "relative",
           width: "100%",
-          height: "80vh",
+          height: "70vh", // Adjusted height to fit Hero and Stats
           backgroundImage: `url(${require("../assets/images/landing-hero.jpg")})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -69,16 +68,25 @@ const Home = () => {
           textAlign: "center",
         }}
       >
-        <Typography variant="h2" sx={{ fontWeight: 700, mb: 2 }}>
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 700,
+            mb: 2,
+            fontSize: { xs: "1.8rem", md: "2.5rem" },
+          }}
+        >
           Welcome to Moringa Connect
         </Typography>
-        <Typography variant="h6" sx={{ mb: 4 }}>
+        <Typography
+          variant="h6"
+          sx={{ mb: 4, fontSize: { xs: "1rem", md: "1.25rem" } }}
+        >
           A platform for Moringa alumni to connect, grow, and thrive.
         </Typography>
         <Box>
           <Button
             variant="contained"
-            color="secondary"
             sx={{
               mr: 2,
               bgcolor: moringaColors.secondary,
@@ -93,9 +101,7 @@ const Home = () => {
             sx={{
               color: moringaColors.white,
               borderColor: moringaColors.white,
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.2)",
-              },
+              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.2)" },
             }}
             href="/app/groups"
           >
@@ -111,6 +117,10 @@ const Home = () => {
           color: moringaColors.white,
           p: 4,
           textAlign: "center",
+          height: "25vh", // Adjusted height for Stats
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
         }}
       >
         <Grid container spacing={4}>
@@ -518,9 +528,6 @@ const Home = () => {
           </Button>
         </Card>
       </Box>
-
-      {/* Footer */}
-      <Footer />
 
       {/* Video Modal */}
       <Modal

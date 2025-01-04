@@ -8,30 +8,28 @@ import {
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./theme"; // Import your custom theme
 import Layout from "./components/Layout";
+import Home from "./pages/Home";
 import Groups from "./pages/Groups";
-import Posts from "./pages/Post";
-import Profile from "./pages/profile";
+import Posts from "./pages/Posts";
+import Profile from "./pages/Profile";
 import Events from "./pages/Events";
-import Home from "./pages/Home"; // Import the Home component
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      {/* CssBaseline applies the global styles */}
       <CssBaseline />
       <Router>
         <Routes>
-          {/* Landing Page Route */}
-          <Route path="/" element={<Home />} /> {/* Home is the landing page */}
-          {/* Main app layout */}
-          <Route path="/app" element={<Layout />}>
-            <Route index element={<Navigate to="/app/groups" replace />} />
-            <Route path="groups" element={<Groups />} />
-            <Route path="posts" element={<Posts />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="events" element={<Events />} />
+          {/* Main Layout Wrapper */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="app/groups" element={<Groups />} />
+            <Route path="app/posts" element={<Posts />} />
+            <Route path="app/profile" element={<Profile />} />
+            <Route path="app/events" element={<Events />} />
           </Route>
-          {/* Catch-all redirect */}
+
+          {/* Redirect to Home if route doesn't exist */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
