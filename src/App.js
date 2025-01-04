@@ -5,7 +5,7 @@ import theme from "./theme";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Groups from "./pages/Groups";
-import Posts from "./pages/Post";
+import Posts from "./pages/Posts";
 import Profile from "./pages/profile";
 import Events from "./pages/Events";
 import { AdminProvider } from "./components/AdminContext";

@@ -3,7 +3,7 @@ import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Di
 import { Dashboard, Person, Group, Article, ExitToApp, AccountCircle, Event } from '@mui/icons-material';
 import Admin from '../components/Dashboard';
 import Profile from '../pages/profile';
-import Posts from '../pages/Post';
+import Posts from '../pages/Posts';
 import Groups from '../pages/Groups';
 import Users from '../components/Users';
 import Events from '../pages/Events';
