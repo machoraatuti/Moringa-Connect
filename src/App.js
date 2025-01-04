@@ -1,15 +1,13 @@
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import theme from "./theme";
 import Layout from "./components/Layout";
+import Home from "./pages/Home";
 import Groups from "./pages/Groups";
 import Posts from "./pages/Post";
-import Profile from "./pages/profile" // Ensure proper capitalization
-import Events from "./pages/Events"; // Import the Events component
+import Profile from "./pages/profile";
+import Events from "./pages/Events";
 import { AdminProvider } from "./components/AdminContext";
 import AdminDashboard from "./pages/Dashpage";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
@@ -17,27 +15,29 @@ import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 function App() {
   return (
     <AdminProvider>
-      <Router>
-        <Routes>
-          <Route 
-            path="/admin/*" 
-            element={
-              <ProtectedAdminRoute>
-                <AdminDashboard />
-              </ProtectedAdminRoute>
-            } 
-          />
-          <Route path="/" element={<Navigate to="/app/groups" replace />} />
-          <Route path="/app" element={<Layout />}>
-            <Route index element={<Navigate to="/app/groups" replace />} />
-            <Route path="groups" element={<Groups />} />
-            <Route path="posts" element={<Posts />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="events" element={<Events />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/app/groups" replace />} />
-        </Routes>
-      </Router>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Routes>
+            <Route 
+              path="/admin/*" 
+              element={
+                <ProtectedAdminRoute>
+                  <AdminDashboard />
+                </ProtectedAdminRoute>
+              } 
+            />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="app/groups" element={<Groups />} />
+              <Route path="app/posts" element={<Posts />} />
+              <Route path="app/profile" element={<Profile />} />
+              <Route path="app/events" element={<Events />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
     </AdminProvider>
   );
 }

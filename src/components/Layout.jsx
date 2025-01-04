@@ -11,15 +11,21 @@ import {
   ListItemText,
   Typography,
   Box,
+  useMediaQuery,
 } from "@mui/material";
 import {
-  Menu,
+  Home,
   Group,
   Article,
   Person,
   Event,
+  Menu,
   Close,
 } from "@mui/icons-material";
+import Footer from "./Footer";
+
+// Importing the logo
+import moringaLogo from "../assets/images/moringalogo.png";
 
 const moringaColors = {
   primary: "#0A1F44",
@@ -32,33 +38,105 @@ const moringaColors = {
 const Layout = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const isLargeScreen = useMediaQuery("(min-width: 900px)");
 
   const menuItems = [
-    { text: "Profile", icon: <Person />, path: "/app/profile" },
+    { text: "Home", icon: <Home />, path: "/app/home" },
     { text: "Groups", icon: <Group />, path: "/app/groups" },
     { text: "Posts", icon: <Article />, path: "/app/posts" },
     { text: "Events", icon: <Event />, path: "/app/events" },
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      {/* AppBar for Hamburger Menu */}
-      <AppBar position="static" sx={{ bgcolor: moringaColors.primary }}>
-        <Toolbar>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        width: "100%",
+        overflowX: "hidden", // Prevent horizontal scrollbars
+      }}
+    >
+      {/* AppBar */}
+      <AppBar
+        position="fixed"
+        sx={{
+          bgcolor: moringaColors.white,
+          color: moringaColors.primary,
+          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+          width: "100%",
+        }}
+      >
+        <Toolbar
+          sx={{
+            justifyContent: isLargeScreen ? "space-between" : "flex-start",
+          }}
+        >
+          {/* Logo */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <img
+              src={moringaLogo}
+              alt="Moringa Logo"
+              style={{ height: "40px", marginRight: "8px" }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                color: moringaColors.primary,
+                fontWeight: 700,
+              }}
+            >
+              Moringa Alumni Connect
+            </Typography>
+          </Box>
+
+          {/* Menu for Larger Screens */}
+          {isLargeScreen && (
+            <Box sx={{ display: "flex", gap: 3 }}>
+              {menuItems.map((item) => (
+                <Typography
+                  key={item.text}
+                  sx={{
+                    cursor: "pointer",
+                    color: moringaColors.primary,
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    "&:hover": { color: moringaColors.secondary },
+                  }}
+                  onClick={() => navigate(item.path)}
+                >
+                  {item.text}
+                </Typography>
+              ))}
+            </Box>
+          )}
+
+          {/* Hamburger Menu for Smaller Screens */}
+          {!isLargeScreen && (
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              onClick={() => setIsDrawerOpen(true)}
+              sx={{
+                marginLeft: "auto",
+              }}
+            >
+              <Menu sx={{ color: moringaColors.primary }} />
+            </IconButton>
+          )}
+
+          {/* Profile Icon (Always Visible) */}
           <IconButton
-            edge="start"
+            edge="end"
             color="inherit"
-            aria-label="menu"
-            onClick={() => setIsDrawerOpen(true)}
+            onClick={() => navigate("/app/profile")}
+            sx={{
+              color: moringaColors.primary,
+            }}
           >
-            <Menu />
+            <Person />
           </IconButton>
-          <Typography
-            variant="h6"
-            sx={{ flexGrow: 1, color: moringaColors.white }}
-          >
-            Moringa Connect
-          </Typography>
         </Toolbar>
       </AppBar>
 
@@ -94,7 +172,7 @@ const Layout = () => {
               key={item.text}
               onClick={() => {
                 navigate(item.path);
-                setIsDrawerOpen(false); // Close drawer on navigation
+                setIsDrawerOpen(false);
               }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
@@ -109,12 +187,16 @@ const Layout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 0, // Remove padding for full-width hero
           bgcolor: moringaColors.background,
+          mt: "64px",
         }}
       >
         <Outlet />
       </Box>
+
+      {/* Footer */}
+      <Footer />
     </Box>
   );
 };
