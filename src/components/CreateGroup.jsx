@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux'; // Redux dispatch
 import { Box, Typography, TextField, Button, Dialog, DialogContent, Select, MenuItem, IconButton, Snackbar, Alert } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import { addGroup } from '../redux/groupsSlice'; // Redux slice action
-import { addGroupToFirestore } from '../firebase'; // Firestore function
+import { addGroupToFirestore } from '../firebaseConfig'; // Firestore function
 
 const colors = {
   primary: '#0A1F44',

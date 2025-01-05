@@ -9,7 +9,7 @@ import {
   Work, Event, Chat, GroupAdd
 } from '@mui/icons-material';
 import CreateGroup from '../components/CreateGroup';
-import { fetchGroupsFromFirestore, addGroupToFirestore, deleteGroupFromFirestore, updateGroupInFirestore } from '../firebase';
+import { fetchGroupsFromFirestore, addGroupToFirestore, deleteGroupFromFirestore, updateGroupInFirestore, joinGroupInFirestore, fetchGroupMembers } from '../firebaseConfig'; // Updated import
 
 const colors = {
   primary: '#0A1F44',
@@ -31,12 +31,21 @@ const Groups = () => {
   const [discussions, setDiscussions] = useState('');
   const [jobPostings, setJobPostings] = useState('');
 
-  // Fetch groups from Firestore when the component loads
+  // Fetch groups from Firestore and member count for each group when the component loads
   useEffect(() => {
     const loadGroups = async () => {
       try {
         const fetchedGroups = await fetchGroupsFromFirestore();
-        setGroups(fetchedGroups);
+        
+        // Fetch member count for each group
+        const groupsWithMembers = await Promise.all(
+          fetchedGroups.map(async (group) => {
+            const members = await fetchGroupMembers(group.id);
+            return { ...group, memberCount: members.length };
+          })
+        );
+        
+        setGroups(groupsWithMembers);
       } catch (error) {
         console.error('Error fetching groups:', error);
       }
@@ -67,6 +76,7 @@ const Groups = () => {
     try {
       // Delete group from Firestore
       await deleteGroupFromFirestore(groupId);
+      
       // Remove the group from the state
       setGroups((prevGroups) => prevGroups.filter(group => group.id !== groupId));
     } catch (error) {
@@ -116,7 +126,25 @@ const Groups = () => {
       console.error('Error saving edited group:', error);
     }
   };
+
+  // Increment the number of members in a group and update Firestore
+  const handleJoinGroup = async (groupId) => {
+    try {
+      // Update Firestore first
+      await joinGroupInFirestore(groupId);
   
+      // Find the group in the local state and increment the member count
+      setGroups((prevGroups) => 
+        prevGroups.map((group) => 
+          group.id === groupId 
+            ? { ...group, memberCount: group.memberCount + 1 } 
+            : group
+        )
+      );
+    } catch (error) {
+      console.error('Error joining group:', error);
+    }
+  };
 
   // Close View Group modal
   const handleCloseViewGroup = () => {
@@ -219,7 +247,7 @@ const Groups = () => {
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <Group sx={{ color: colors.primary, mr: 1 }} />
-                    <Typography>{group.members || 0} members</Typography>
+                    <Typography>{group.memberCount || 0} members</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
@@ -256,7 +284,7 @@ const Groups = () => {
                   </Tooltip>
                   {/* Join Group Icon */}
                   <Tooltip title="Join Group">
-                    <IconButton sx={{ color: colors.secondary }}>
+                    <IconButton sx={{ color: colors.secondary }} onClick={() => handleJoinGroup(group.id)}>
                       <GroupAdd />
                     </IconButton>
                   </Tooltip>
@@ -283,7 +311,7 @@ const Groups = () => {
               <strong>Description:</strong> {selectedGroup.description}
             </Typography>
             <Typography variant="body1">
-              <strong>Members:</strong> {selectedGroup.members || 0}
+              <strong>Members:</strong> {selectedGroup.memberCount || 0}
             </Typography>
             <Typography variant="body1">
               <strong>Upcoming Events:</strong> {selectedGroup.upcomingEvents || 'None'}
@@ -302,47 +330,45 @@ const Groups = () => {
       )}
 
       {/* Edit Group Modal */}
-      {selectedGroup && (
-        <Dialog open={openEditGroup} onClose={handleCloseEditGroup}>
-          <DialogTitle>Edit Group</DialogTitle>
-          <DialogContent>
-            <TextField
-              label="Upcoming Events"
-              fullWidth
-              variant="outlined"
-              value={upcomingEvents}
-              onChange={(e) => setUpcomingEvents(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Recent Discussions"
-              fullWidth
-              variant="outlined"
-              value={discussions}
-              onChange={(e) => setDiscussions(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Job Postings"
-              fullWidth
-              variant="outlined"
-              value={jobPostings}
-              onChange={(e) => setJobPostings(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseEditGroup}>Cancel</Button>
-            <Button onClick={handleSaveEdit} color="primary">
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+      <Dialog open={openEditGroup} onClose={handleCloseEditGroup}>
+        <DialogTitle>Edit Group</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Upcoming Events"
+            variant="outlined"
+            value={upcomingEvents}
+            onChange={(e) => setUpcomingEvents(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Recent Discussions"
+            variant="outlined"
+            value={discussions}
+            onChange={(e) => setDiscussions(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Job Postings"
+            variant="outlined"
+            value={jobPostings}
+            onChange={(e) => setJobPostings(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditGroup}>Cancel</Button>
+          <Button onClick={handleSaveEdit}>Save</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
 export default Groups;
+
 
 
 
