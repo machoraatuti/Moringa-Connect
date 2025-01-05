@@ -22,6 +22,9 @@ const colors = {
 const Groups = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
+   const [categoryFilter, setCategoryFilter] = useState('all');
+    const [buttonError, setButtonError] = useState(null);
+    const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false); // Snackbar state to display error message
   
   const groups = [
     {
@@ -64,6 +67,19 @@ const Groups = () => {
     group.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Function to handle button click and validate input
+  const handleButtonClick = () => {
+    if (!categoryFilter) {
+      setButtonError(true);
+      setOpenErrorSnackbar(true);
+    } else {
+      // Proceed with the search or filtering logic if category is selected
+      console.log(`Searching for posts in category: ${categoryFilter}`);
+      setButtonError(false); // Reset error state if valid
+      setOpenErrorSnackbar(false); // Close the error snackbar
+    }
+  };
+
   return (
     <Box p={3} sx={{ bgcolor: colors.background, minHeight: '100vh' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
@@ -85,20 +101,43 @@ const Groups = () => {
       </Box>
 
       <Box mb={4}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
-            <Card sx={{ bgcolor: colors.primary, color: colors.white }}>
-              <CardContent>
-                <Group sx={{ fontSize: 40, mb: 1 }} />
-                <Typography variant="h4">{groups.length}</Typography>
-                <Typography>Active Groups</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
-
+  <Grid container spacing={2} alignItems="center">
+    <Grid item xs={8}>
       <TextField
+        fullWidth
+        label="Search Groups"
+        variant="outlined"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            '&:hover fieldset': { borderColor: colors.secondary },
+            '&.Mui-focused fieldset': { borderColor: colors.secondary },
+          },
+          '& .MuiInputLabel-root.Mui-focused': { color: colors.secondary },
+        }}
+      />
+    </Grid>
+    <Grid item xs={4}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleButtonClick} // Handle button click with validation
+        sx={{
+          bgcolor: colors.secondary,
+          '&:hover': { bgcolor: colors.primary },
+          borderRadius: '8px',
+          width: '100%' // To ensure it fits the grid layout
+        }}
+      >
+        Search
+      </Button>
+    </Grid>
+  </Grid>
+</Box>
+
+
+      {/* <TextField
         fullWidth
         label="Search Groups"
         variant="outlined"
@@ -113,6 +152,18 @@ const Groups = () => {
           '& .MuiInputLabel-root.Mui-focused': { color: colors.secondary },
         }}
       />
+       <Button
+                variant="contained"
+                color="primary"
+                onClick={handleButtonClick}  // Handle button click with validation
+                sx={{
+                  bgcolor: colors.secondary,
+                  '&:hover': { bgcolor: colors.primary },
+                  borderRadius: '8px'
+                }}
+              >
+                Search
+              </Button> */}
 
       <TableContainer 
         component={Paper}
