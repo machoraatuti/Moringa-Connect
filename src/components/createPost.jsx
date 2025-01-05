@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   Box, Typography, TextField, Button, Select, MenuItem,
   IconButton, Snackbar, Alert
@@ -6,7 +7,9 @@ import {
 import {
   Close, AddPhotoAlternate, Delete
 } from '@mui/icons-material';
+import { createPost } from '../Features/posts/postSlice';
 
+// Define colors directly in the component
 const colors = {
   primary: '#0A1F44',
   secondary: '#F05A28',
@@ -16,6 +19,7 @@ const colors = {
 };
 
 const CreatePost = ({ onClose }) => {
+  const dispatch = useDispatch();
   const [postData, setPostData] = useState({
     title: '',
     content: '',
@@ -29,12 +33,7 @@ const CreatePost = ({ onClose }) => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const categories = [
-    'Technology',
-    'Career',
-    'Education',
-    'Events',
-    'Projects',
-    'Other'
+    'Technology', 'Career', 'Education', 'Events', 'Projects', 'Other'
   ];
 
   const handleImageUpload = (event) => {
@@ -42,7 +41,7 @@ const CreatePost = ({ onClose }) => {
     if (file) {
       setPostData({
         ...postData,
-        image: URL.createObjectURL(file)
+        image: file
       });
     }
   };
@@ -56,27 +55,31 @@ const CreatePost = ({ onClose }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(postData)
-      });
+      // Convert postData to plain object
+      const submitData = {
+        title: postData.title,
+        content: postData.content,
+        category: postData.category,
+        tags: postData.tags,
+        image: postData.image ? URL.createObjectURL(postData.image) : null
+      };
 
-      if (!response.ok) throw new Error('Failed to create post');
+      // Dispatch createPost action
+      await dispatch(createPost(submitData)).unwrap();
 
       setSnackbarMessage('Post published successfully!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
+      
+      // Reset form
       setPostData({ title: '', content: '', category: '', tags: [], image: null });
+      onClose();
     } catch (error) {
-      setSnackbarMessage('An error occurred while publishing the post.');
+      setSnackbarMessage(error || 'An error occurred while publishing the post.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
   };
-
   return (
     <Box sx={{ maxWidth: '800px', margin: '20px auto', p: 3 }}>
       <Box sx={{ 
@@ -154,7 +157,7 @@ const CreatePost = ({ onClose }) => {
           {postData.image && (
             <Box sx={{ mt: 2, position: 'relative', width: 'fit-content' }}>
               <img 
-                src={postData.image} 
+                src={URL.createObjectURL(postData.image)} 
                 alt="Preview" 
                 style={{ maxWidth: '200px', borderRadius: '8px' }} 
               />
