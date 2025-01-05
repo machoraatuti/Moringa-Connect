@@ -1,10 +1,9 @@
-// Posts.jsx
 import React, { useState } from 'react';
 import { 
   Box, Grid, Card, CardContent, CardMedia, Typography,
   IconButton, Chip, useTheme, useMediaQuery, TextField, 
   Button, Avatar, Select, MenuItem, InputAdornment,
-  Divider, Dialog, DialogContent
+  Dialog, DialogContent, Snackbar, Alert
 } from '@mui/material';
 import { 
   Delete, Edit, Search, Add,
@@ -44,6 +43,8 @@ const Posts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [openCreatePost, setOpenCreatePost] = useState(false);
+  const [buttonError, setButtonError] = useState(null);
+  const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false); // Snackbar state to display error message
 
   const posts = [
     {
@@ -68,7 +69,7 @@ const Posts = () => {
       title: 'UI Design Tips',
       category: 'Design',
       author: {
-        name: 'vinter ',
+        name: 'vinter',
         avatar: 'https://via.placeholder.com/40',
         role: 'UX Designer'
       },
@@ -85,6 +86,20 @@ const Posts = () => {
     const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  // Function to handle button click and validate input
+  const handleButtonClick = () => {
+    if (!categoryFilter) {
+      setButtonError(true);
+      setOpenErrorSnackbar(true);
+    } else {
+      // Proceed with the search or filtering logic if category is selected
+      console.log(`Searching for posts in category: ${categoryFilter}`);
+      setButtonError(false); // Reset error state if valid
+      setOpenErrorSnackbar(false); // Close the error snackbar
+    }
+  };
+
 
   const PostCard = ({ post }) => (
     <Card sx={cardStyles}>
@@ -230,7 +245,7 @@ const Posts = () => {
             }
           }}
         />
-        <Select
+   <Select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
           sx={{ 
@@ -248,7 +263,31 @@ const Posts = () => {
             </MenuItem>
           ))}
         </Select>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleButtonClick}  // Handle button click with validation
+          sx={{
+            bgcolor: colors.secondary,
+            '&:hover': { bgcolor: colors.primary },
+            borderRadius: '8px'
+          }}
+        >
+          Search
+        </Button>
       </Box>
+      {/* Snackbar for error display */}
+      <Snackbar
+        open={openErrorSnackbar}
+        autoHideDuration={3000}  // Auto-hide after 3 seconds
+        onClose={() => setOpenErrorSnackbar(false)}
+      >
+        <Alert onClose={() => setOpenErrorSnackbar(false)} severity="error">
+          Please select a category to search.
+        </Alert>
+      </Snackbar>
+          
+
 
       <Grid container spacing={3}>
         {filteredPosts.map((post) => (
