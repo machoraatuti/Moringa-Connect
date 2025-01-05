@@ -5,6 +5,7 @@ import {
   IconButton
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
+import { db, addDoc, collection } from '../firebase';
 
 const colors = {
   primary: '#0A1F44',
@@ -23,11 +24,16 @@ const CreateGroup = ({ open, onClose }) => {
 
   const categories = ['Software Engineering', 'Design', 'Data Science'];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log(groupData);
-    onClose();
+    try {
+      // Save data to Firestore
+      await addDoc(collection(db, 'groups'), groupData);
+      console.log('Group created successfully!');
+      onClose();
+    } catch (error) {
+      console.error('Error creating group:', error);
+    }
   };
 
   return (
