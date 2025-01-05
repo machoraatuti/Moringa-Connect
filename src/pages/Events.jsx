@@ -1,4 +1,14 @@
-import React, { useState } from "react";
+// components/UserEvents.jsx
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchEvents,
+  selectAllEvents,
+  selectEventNotifications,
+  selectEventsLoading,
+  selectEventsError,
+  dismissNotification
+} from '../Features/events/eventSlice';
 import {
   Box,
   Grid,
@@ -7,231 +17,190 @@ import {
   CardMedia,
   Typography,
   Button,
+  Chip,
+  Alert,
+  CircularProgress,
+  IconButton,
   Dialog,
   DialogContent,
   DialogActions,
-  Divider,
+  Slide,
+  Divider
 } from "@mui/material";
+import { 
+  Close, 
+  CalendarToday, 
+  LocationOn, 
+  AccessTime,
+  Groups 
+} from '@mui/icons-material';
 
-// Reference to Moringa's color palette
 const moringaColors = {
   primary: "#0A1F44",
   secondary: "#F05A28",
   background: "#FFF5F2",
   white: "#FFFFFF",
   divider: "rgba(240, 90, 40, 0.12)",
+  success: "#4CAF50",
+  warning: "#FFC107",
+  error: "#F44336"
 };
 
-const Events = () => {
-  const [events] = useState([
-    {
-      id: 1,
-      image: require("../assets/images/graduation.jpg"),
-      date: "10 Aug",
-      title: "2025 Graduation Ceremony",
-      description: "Celebrate the accomplishments of our talented students.",
-      location: "Moringa School, Nairobi",
-      time: "8:00 am - 1:00 pm",
-      dressCode: "Smart Casual",
-      category: "Educational",
-    },
-    {
-      id: 2,
-      image: require("../assets/images/cybersecurity.jpg"),
-      date: "18 Jul",
-      title: "Cybersecurity",
-      description:
-        "An in-depth webinar on cyber threat intelligence and security.",
-      location: "Zoom Webinar",
-      time: "5:30 pm - 8:00 pm",
-      dressCode: "No dress code (Virtual)",
-      category: "Technical",
-    },
-    {
-      id: 3,
-      image: require("../assets/images/cocktails.jpg"),
-      date: "25 Sep",
-      title: "Alumni Cocktail Night",
-      description: "Network and celebrate with fellow alumni.",
-      location: "Westlands, Nairobi",
-      time: "6:00 pm - 9:00 pm",
-      dressCode: "Formal/Smart Casual",
-      category: "Social",
-    },
-    {
-      id: 4,
-      image: require("../assets/images/bootcamp.jpg"),
-      date: "15 Nov",
-      title: "Data Science Bootcamp",
-      description:
-        "Learn Python, Machine Learning, and AI tools in this hands-on bootcamp.",
-      location: "Kikao64, Eldoret",
-      time: "9:00 am - 5:00 pm",
-      dressCode: "Business Casual",
-      category: "Educational",
-    },
-    {
-      id: 5,
-      image: require("../assets/images/hiking.jpg"),
-      date: "05 Dec",
-      title: "Alumni Hike to Ngong Hills",
-      description: "Reconnect with nature and fellow alumni.",
-      location: "Ngong Hills, Nairobi",
-      time: "7:00 am - 3:00 pm",
-      dressCode: "Comfortable Hiking Attire",
-      category: "Social",
-    },
-    {
-      id: 6,
-      image: require("../assets/images/frontend.jpg"),
-      date: "22 Jan",
-      title: "Frontend Developer Workshop",
-      description: "Master React and Next.js in this practical session.",
-      location: "Kikao64, Eldoret",
-      time: "9:00 am - 4:00 pm",
-      dressCode: "Smart Casual",
-      category: "Technical",
-    },
-  ]);
+const getStatusColor = (status) => {
+  const statusColors = {
+    upcoming: moringaColors.primary,
+    completed: moringaColors.success,
+    cancelled: moringaColors.error,
+    rescheduled: moringaColors.warning
+  };
+  return statusColors[status] || moringaColors.primary;
+};
 
+const UserEvents = () => {
+  const dispatch = useDispatch();
+  const events = useSelector(selectAllEvents);
+  const notifications = useSelector(selectEventNotifications);
+  const loading = useSelector(selectEventsLoading);
+  const error = useSelector(selectEventsError);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [notificationVisible, setNotificationVisible] = useState(true);
 
-  const handleViewMore = (event) => {
+  useEffect(() => {
+    dispatch(fetchEvents());
+  }, [dispatch]);
+
+  const handleViewDetails = (event) => {
     setSelectedEvent(event);
   };
 
-  const handleCloseModal = () => {
-    setSelectedEvent(null);
+  const handleDismissNotification = (notificationId) => {
+    dispatch(dismissNotification(notificationId));
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress sx={{ color: moringaColors.secondary }} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={4}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ bgcolor: moringaColors.background, minHeight: "100vh" }}>
-      {/* Hero Section */}
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          height: "200px",
-          overflow: "hidden",
-          marginTop: 0,
-        }}
-      >
-        {/* Blurred Background */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundImage: `url(${require("../assets/images/hero-background.jpg")})`,
-            backgroundPosition: "center",
-            filter: "blur(8px)", // Apply blur effect
-            zIndex: 1,
-          }}
-        />
-        {/* Title */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 2,
-          }}
-        >
-          <Typography
-            variant="h2"
-            sx={{
-              color: moringaColors.white,
-              fontWeight: 700,
-              textAlign: "center",
-            }}
-          >
-            Events
-          </Typography>
-        </Box>
-      </Box>
+      {/* Notifications Banner */}
+      {notifications.length > 0 && notificationVisible && (
+        <Slide direction="down" in={true}>
+          <Box sx={{ 
+            position: 'sticky', 
+            top: 0, 
+            zIndex: 10,
+            bgcolor: moringaColors.primary,
+            color: moringaColors.white,
+            p: 2,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <Typography variant="body1">
+              {notifications[0].message}
+            </Typography>
+            <IconButton 
+              size="small" 
+              onClick={() => setNotificationVisible(false)}
+              sx={{ color: moringaColors.white }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </Slide>
+      )}
 
-      {/* Event Cards */}
+      {/* Main Content */}
       <Box sx={{ p: 4 }}>
+        <Typography variant="h4" sx={{ mb: 4, color: moringaColors.primary, fontWeight: 600 }}>
+          Upcoming Events
+        </Typography>
+
         <Grid container spacing={4}>
           {events.map((event) => (
             <Grid item xs={12} md={6} lg={4} key={event.id}>
-              <Card
-                sx={{
-                  borderRadius: "16px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                  overflow: "hidden",
-                  position: "relative",
-                  height: "350px",
-                  display: "flex",
-                  flexDirection: "column",
+              <Card 
+                sx={{ 
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+                  }
                 }}
               >
                 <CardMedia
                   component="img"
-                  height="160"
+                  height="200"
                   image={event.image}
                   alt={event.title}
-                  sx={{
-                    objectFit: "cover",
-                    maxHeight: "160px",
-                  }}
+                  sx={{ objectFit: 'cover' }}
                 />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    bgcolor: moringaColors.secondary,
-                    color: moringaColors.white,
-                    borderRadius: "50%",
-                    width: 56,
-                    height: 56,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                    fontWeight: 700,
-                  }}
-                >
-                  {event.date}
-                </Box>
-                <CardContent
-                  sx={{
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      color: moringaColors.primary,
-                      fontWeight: 600,
-                      mb: 1,
-                    }}
-                  >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ mb: 2 }}>
+                    <Chip
+                      label={event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                      sx={{
+                        bgcolor: `${getStatusColor(event.status)}15`,
+                        color: getStatusColor(event.status),
+                        fontWeight: 500
+                      }}
+                    />
+                  </Box>
+                  
+                  <Typography variant="h6" gutterBottom sx={{ color: moringaColors.primary }}>
                     {event.title}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
+
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
                     sx={{ mb: 2 }}
                   >
                     {event.description}
                   </Typography>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CalendarToday sx={{ fontSize: 18, color: moringaColors.secondary }} />
+                      <Typography variant="body2">{event.date}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AccessTime sx={{ fontSize: 18, color: moringaColors.secondary }} />
+                      <Typography variant="body2">{event.time}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LocationOn sx={{ fontSize: 18, color: moringaColors.secondary }} />
+                      <Typography variant="body2">{event.location}</Typography>
+                    </Box>
+                  </Box>
+
                   <Button
-                    onClick={() => handleViewMore(event)}
+                    fullWidth
                     variant="contained"
+                    onClick={() => handleViewDetails(event)}
                     sx={{
+                      mt: 3,
                       bgcolor: moringaColors.secondary,
-                      "&:hover": { bgcolor: moringaColors.primary },
+                      '&:hover': { bgcolor: moringaColors.primary }
                     }}
                   >
-                    View More →
+                    View Details
                   </Button>
                 </CardContent>
               </Card>
@@ -241,64 +210,84 @@ const Events = () => {
       </Box>
 
       {/* Event Details Modal */}
-      {selectedEvent && (
-        <Dialog
-          open={Boolean(selectedEvent)}
-          onClose={handleCloseModal}
-          fullWidth
-          maxWidth="sm"
-        >
-          <DialogContent sx={{ p: 4 }}>
-            <Box
-              component="img"
-              src={selectedEvent.image}
-              alt={selectedEvent.title}
-              sx={{
-                width: "100%",
-                height: "200px",
-                objectFit: "cover",
-                borderRadius: "8px",
-                mb: 3,
-              }}
-            />
-            <Typography
-              variant="h4"
-              sx={{ mb: 2, color: moringaColors.primary }}
-            >
-              {selectedEvent.title}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              {selectedEvent.description}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              <strong>Location:</strong> {selectedEvent.location}
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              <strong>Date:</strong> {selectedEvent.date}
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              <strong>Time:</strong> {selectedEvent.time}
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              <strong>Dress Code:</strong> {selectedEvent.dressCode}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleCloseModal}
-              sx={{
-                color: moringaColors.secondary,
-                "&:hover": { bgcolor: moringaColors.divider },
-              }}
-            >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+      <Dialog
+        open={Boolean(selectedEvent)}
+        onClose={() => setSelectedEvent(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        {selectedEvent && (
+          <>
+            <DialogContent sx={{ p: 0 }}>
+              <CardMedia
+                component="img"
+                height="240"
+                image={selectedEvent.image}
+                alt={selectedEvent.title}
+              />
+              <Box sx={{ p: 3 }}>
+                <Box sx={{ mb: 2 }}>
+                  <Chip
+                    label={selectedEvent.status}
+                    sx={{
+                      bgcolor: `${getStatusColor(selectedEvent.status)}15`,
+                      color: getStatusColor(selectedEvent.status),
+                      fontWeight: 500
+                    }}
+                  />
+                </Box>
+
+                <Typography variant="h5" gutterBottom sx={{ color: moringaColors.primary }}>
+                  {selectedEvent.title}
+                </Typography>
+
+                <Typography variant="body1" paragraph>
+                  {selectedEvent.description}
+                </Typography>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">Date</Typography>
+                    <Typography variant="body1">{selectedEvent.date}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="text.secondary">Time</Typography>
+                    <Typography variant="body1">{selectedEvent.time}</Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">Location</Typography>
+                    <Typography variant="body1">{selectedEvent.location}</Typography>
+                  </Grid>
+                  {selectedEvent.dressCode && (
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" color="text.secondary">Dress Code</Typography>
+                      <Typography variant="body1">{selectedEvent.dressCode}</Typography>
+                    </Grid>
+                  )}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">Capacity</Typography>
+                    <Typography variant="body1">
+                      {selectedEvent.attendance} / {selectedEvent.maxCapacity} attendees
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, pt: 0 }}>
+              <Button 
+                onClick={() => setSelectedEvent(null)}
+                sx={{ color: moringaColors.primary }}
+              >
+                Close
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 };
 
-export default Events;
+export default UserEvents;

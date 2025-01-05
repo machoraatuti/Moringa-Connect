@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '../Features/auth/authSlice';
 import {
   Box,
   Typography,
@@ -30,10 +33,10 @@ const moringaColors = {
 };
 
 const Profile = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authTab, setAuthTab] = useState(0); // 0 for Login, 1 for Sign-Up
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useSelector(state => state.auth);
+  
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -45,53 +48,36 @@ const Profile = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
 
-  const mockUser = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "https://via.placeholder.com/150",
-    description: "Passionate about technology and education.",
-    location: "Nairobi, Kenya",
-  };
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isAuthenticated");
-    if (isLoggedIn) {
-      setIsAuthenticated(true);
-      setUser(mockUser);
-      setDescription(mockUser.description);
-      setLocation(mockUser.location);
+    if (user) {
+      setDescription(user.description || "");
+      setLocation(user.location || "");
     }
-  }, []);
+  }, [user]);
 
-  const handleLogin = () => {
-    localStorage.setItem("isAuthenticated", "true");
-    setIsAuthenticated(true);
-    setUser(mockUser);
-    setAuthModalOpen(false);
-  };
-
-  const handleSignUp = () => {
-    localStorage.setItem("isAuthenticated", "true");
-    setIsAuthenticated(true);
-    setUser(mockUser);
-    setAuthModalOpen(false);
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   const handleSave = () => {
     setEditing(false);
+    // Here you would typically dispatch an action to update the user profile
+    // For now, we'll just update the local state
     if (user) {
-      setUser((prevUser) => ({
-        ...prevUser,
-        description: description || prevUser.description,
-        location: location || prevUser.location,
-      }));
+      // Implement profile update logic here
+      console.log('Profile updated:', { description, location });
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    setIsAuthenticated(false);
-    setUser(null);
   };
 
   const handlePasswordChange = () => {
@@ -99,10 +85,7 @@ const Profile = () => {
       alert("New passwords do not match!");
       return;
     }
-    if (oldPassword !== "mockPassword") {
-      alert("Old password is incorrect!");
-      return;
-    }
+    // Implement password change logic here
     alert("Password successfully changed!");
     setChangingPassword(false);
     setOldPassword("");
@@ -111,16 +94,14 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = () => {
+    // Implement account deletion logic here
     alert("Account successfully deleted!");
     setDeletingAccount(false);
     handleLogout();
   };
 
   const handleProfilePictureChange = () => {
-    setUser((prevUser) => ({
-      ...prevUser,
-      avatar: newProfilePicture || prevUser.avatar,
-    }));
+    // Implement profile picture update logic here
     setEditingPicture(false);
     setNewProfilePicture("");
   };
@@ -137,125 +118,16 @@ const Profile = () => {
   };
 
   const handleTakePhoto = () => {
-    alert(
-      "Camera functionality is not yet implemented. Placeholder for integration."
-    );
+    alert("Camera functionality is not yet implemented.");
   };
 
   const handleDeletePhoto = () => {
-    setUser((prevUser) => ({
-      ...prevUser,
-      avatar: "https://via.placeholder.com/150",
-    }));
+    // Implement photo deletion logic here
     setEditingPicture(false);
   };
 
-  if (!isAuthenticated) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          bgcolor: moringaColors.background,
-          p: 2,
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{ color: moringaColors.primary, mb: 3, textAlign: "center" }}
-        >
-          Welcome!
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{ color: moringaColors.primary, mb: 2, textAlign: "center" }}
-        >
-          Please log in or sign up to access your profile.
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{
-            bgcolor: moringaColors.primary,
-            "&:hover": { bgcolor: moringaColors.secondary },
-          }}
-          onClick={() => setAuthModalOpen(true)}
-        >
-          Log In / Sign Up
-        </Button>
-
-        {/* Authentication Modal */}
-        <Modal
-          open={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          closeAfterTransition
-          BackdropComponent={Backdrop}
-          BackdropProps={{ timeout: 500 }}
-        >
-          <Fade in={authModalOpen}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: 400,
-                bgcolor: moringaColors.white,
-                boxShadow: 24,
-                p: 4,
-                borderRadius: "8px",
-              }}
-            >
-              <IconButton
-                sx={{ position: "absolute", top: 8, right: 8 }}
-                onClick={() => setAuthModalOpen(false)}
-              >
-                <Close />
-              </IconButton>
-
-              <Tabs
-                value={authTab}
-                onChange={(e, newValue) => setAuthTab(newValue)}
-                textColor="primary"
-                indicatorColor="primary"
-                variant="fullWidth"
-                sx={{ mb: 2 }}
-              >
-                <Tab label="Login" />
-                <Tab label="Sign-Up" />
-              </Tabs>
-
-              {authTab === 0 ? (
-                <Box>
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    Login
-                  </Typography>
-                  <TextField fullWidth label="Email" sx={{ mb: 2 }} />
-                  <TextField fullWidth label="Password" sx={{ mb: 2 }} />
-                  <Button onClick={handleLogin} variant="contained">
-                    Login
-                  </Button>
-                </Box>
-              ) : (
-                <Box>
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    Sign-Up
-                  </Typography>
-                  <TextField fullWidth label="Name" sx={{ mb: 2 }} />
-                  <TextField fullWidth label="Email" sx={{ mb: 2 }} />
-                  <TextField fullWidth label="Password" sx={{ mb: 2 }} />
-                  <Button onClick={handleSignUp} variant="contained">
-                    Sign-Up
-                  </Button>
-                </Box>
-              )}
-            </Box>
-          </Fade>
-        </Modal>
-      </Box>
-    );
+  if (!user || !isAuthenticated) {
+    return null; // Let the useEffect redirect handle this case
   }
 
   return (
@@ -374,6 +246,7 @@ const Profile = () => {
         Logout
       </Button>
 
+      {/* Profile Picture Modal */}
       <Modal
         open={editingPicture}
         onClose={() => setEditingPicture(false)}
@@ -395,10 +268,7 @@ const Profile = () => {
               borderRadius: "8px",
             }}
           >
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, color: moringaColors.primary }}
-            >
+            <Typography variant="h6" sx={{ mb: 2, color: moringaColors.primary }}>
               Update Profile Picture
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
