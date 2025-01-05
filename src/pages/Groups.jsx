@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, TableContainer, Table, TableHead, TableBody,
   TableRow, TableCell, Paper, IconButton, TextField,
-  Tooltip, Typography, Button, Chip, Card, CardContent,
-  Grid
+  Tooltip, Typography, Button, Chip, Grid, Dialog, DialogActions, DialogContent, DialogTitle
 } from '@mui/material';
 import { 
   Delete, Edit, Visibility, Group, Add,
-  Work, Event, Chat
+  Work, Event, Chat, GroupAdd
 } from '@mui/icons-material';
 import CreateGroup from '../components/CreateGroup';
+import { fetchGroupsFromFirestore, addGroupToFirestore, deleteGroupFromFirestore, updateGroupInFirestore, joinGroupInFirestore, fetchGroupMembers } from '../firebaseConfig'; // Updated import
 
 const colors = {
   primary: '#0A1F44',
@@ -22,62 +22,140 @@ const colors = {
 const Groups = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
-   const [categoryFilter, setCategoryFilter] = useState('all');
-    const [buttonError, setButtonError] = useState(null);
-    const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false); // Snackbar state to display error message
-  
-  const groups = [
-    {
-      id: 1,
-      name: 'Software Engineering Alumni 2024',
-      dateCreated: '2024-01-15',
-      members: 45,
-      description: 'A community for SE graduates to network and share opportunities',
-      category: 'Software Engineering',
-      upcomingEvents: 2,
-      recentDiscussions: 5,
-      jobPostings: 3
-    },
-    {
-      id: 2,
-      name: 'UI/UX Design Network',
-      dateCreated: '2024-01-16',
-      members: 32,
-      description: 'Connect with fellow UX designers from Moringa',
-      category: 'Design',
-      upcomingEvents: 1,
-      recentDiscussions: 8,
-      jobPostings: 4
-    },
-    {
-      id: 3,
-      name: 'Data Science Cohort 2023',
-      dateCreated: '2024-01-17',
-      members: 28,
-      description: 'Data Science alumni collaboration and mentorship',
-      category: 'Data Science',
-      upcomingEvents: 3,
-      recentDiscussions: 12,
-      jobPostings: 6
-    }
-  ];
+  const [openViewGroup, setOpenViewGroup] = useState(false);
+  const [openEditGroup, setOpenEditGroup] = useState(false); // Modal state for editing group
+  const [selectedGroup, setSelectedGroup] = useState(null); // Store the selected group data
+  const [groups, setGroups] = useState([]); // Store groups fetched from Firestore
 
-  const filteredGroups = groups.filter(group => 
+  const [upcomingEvents, setUpcomingEvents] = useState('');
+  const [discussions, setDiscussions] = useState('');
+  const [jobPostings, setJobPostings] = useState('');
+
+  // Fetch groups from Firestore and member count for each group when the component loads
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const fetchedGroups = await fetchGroupsFromFirestore();
+        
+        // Fetch member count for each group
+        const groupsWithMembers = await Promise.all(
+          fetchedGroups.map(async (group) => {
+            const members = await fetchGroupMembers(group.id);
+            return { ...group, memberCount: members.length };
+          })
+        );
+        
+        setGroups(groupsWithMembers);
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+      }
+    };
+
+    loadGroups();
+  }, []);
+
+  // Filter groups based on search term
+  const filteredGroups = groups.filter((group) => 
     group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     group.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Function to handle button click and validate input
-  const handleButtonClick = () => {
-    if (!categoryFilter) {
-      setButtonError(true);
-      setOpenErrorSnackbar(true);
-    } else {
-      // Proceed with the search or filtering logic if category is selected
-      console.log(`Searching for posts in category: ${categoryFilter}`);
-      setButtonError(false); // Reset error state if valid
-      setOpenErrorSnackbar(false); // Close the error snackbar
+  // Add a new group and update Firestore
+  const handleAddGroup = async (newGroup) => {
+    try {
+      // Add new group to Firestore
+      const savedGroup = await addGroupToFirestore(newGroup);
+      setGroups((prevGroups) => [...prevGroups, savedGroup]);
+    } catch (error) {
+      console.error('Error adding group:', error);
     }
+  };
+
+  // Delete a group from Firestore
+  const handleDeleteGroup = async (groupId) => {
+    try {
+      // Delete group from Firestore
+      await deleteGroupFromFirestore(groupId);
+      
+      // Remove the group from the state
+      setGroups((prevGroups) => prevGroups.filter(group => group.id !== groupId));
+    } catch (error) {
+      console.error('Error deleting group:', error);
+    }
+  };
+
+  // Handle View Group click to open modal with group data
+  const handleViewGroup = (group) => {
+    setSelectedGroup(group);
+    setOpenViewGroup(true); // Open the modal
+  };
+
+  // Handle Edit Group click to open modal for editing
+  const handleEditGroup = (group) => {
+    setSelectedGroup(group);
+    setUpcomingEvents(group.upcomingEvents || '');
+    setDiscussions(group.recentDiscussions || '');
+    setJobPostings(group.jobPostings || '');
+    setOpenEditGroup(true); // Open the edit modal
+  };
+
+  // Save the edited group data
+  const handleSaveEdit = async () => {
+    try {
+      // Create the updated group data
+      const updatedGroup = {
+        ...selectedGroup,
+        upcomingEvents,
+        recentDiscussions: discussions,
+        jobPostings
+      };
+      
+      // Update the group in Firestore
+      await updateGroupInFirestore(updatedGroup.id, updatedGroup);
+      
+      // Update the group in the state by replacing the old data with the updated one
+      setGroups((prevGroups) => 
+        prevGroups.map((group) => 
+          group.id === updatedGroup.id ? updatedGroup : group
+        )
+      );
+  
+      // Close the edit modal
+      setOpenEditGroup(false);
+    } catch (error) {
+      console.error('Error saving edited group:', error);
+    }
+  };
+
+  // Increment the number of members in a group and update Firestore
+  const handleJoinGroup = async (groupId) => {
+    try {
+      // Update Firestore first
+      await joinGroupInFirestore(groupId);
+  
+      // Find the group in the local state and increment the member count
+      setGroups((prevGroups) => 
+        prevGroups.map((group) => 
+          group.id === groupId 
+            ? { ...group, memberCount: group.memberCount + 1 } 
+            : group
+        )
+      );
+    } catch (error) {
+      console.error('Error joining group:', error);
+    }
+  };
+
+  // Close View Group modal
+  const handleCloseViewGroup = () => {
+    setOpenViewGroup(false);
+    setSelectedGroup(null); // Clear the selected group
+  };
+
+  // Close Edit Group modal
+  const handleCloseEditGroup = () => {
+    setOpenEditGroup(false);
+    setSelectedGroup(null); // Clear the selected group
   };
 
   return (
@@ -100,74 +178,32 @@ const Groups = () => {
         </Button>
       </Box>
 
+      {/* Search Bar */}
       <Box mb={4}>
-  <Grid container spacing={2} alignItems="center">
-    <Grid item xs={8}>
-      <TextField
-        fullWidth
-        label="Search Groups"
-        variant="outlined"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': { borderColor: colors.secondary },
-            '&.Mui-focused fieldset': { borderColor: colors.secondary },
-          },
-          '& .MuiInputLabel-root.Mui-focused': { color: colors.secondary },
-        }}
-      />
-    </Grid>
-    <Grid item xs={4}>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleButtonClick} // Handle button click with validation
-        sx={{
-          bgcolor: colors.secondary,
-          '&:hover': { bgcolor: colors.primary },
-          borderRadius: '8px',
-          width: '100%' // To ensure it fits the grid layout
-        }}
-      >
-        Search
-      </Button>
-    </Grid>
-  </Grid>
-</Box>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={8}>
+            <TextField
+              fullWidth
+              label="Search Groups"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': { borderColor: colors.secondary },
+                  '&.Mui-focused fieldset': { borderColor: colors.secondary },
+                },
+                '& .MuiInputLabel-root.Mui-focused': { color: colors.secondary },
+              }}
+            />
+          </Grid>
+        </Grid>
+      </Box>
 
-
-      {/* <TextField
-        fullWidth
-        label="Search Groups"
-        variant="outlined"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{
-          mb: 3,
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': { borderColor: colors.secondary },
-            '&.Mui-focused fieldset': { borderColor: colors.secondary },
-          },
-          '& .MuiInputLabel-root.Mui-focused': { color: colors.secondary },
-        }}
-      />
-       <Button
-                variant="contained"
-                color="primary"
-                onClick={handleButtonClick}  // Handle button click with validation
-                sx={{
-                  bgcolor: colors.secondary,
-                  '&:hover': { bgcolor: colors.primary },
-                  borderRadius: '8px'
-                }}
-              >
-                Search
-              </Button> */}
-
-      <TableContainer 
+      {/* Groups Table */}
+      <TableContainer
         component={Paper}
-        sx={{ 
+        sx={{
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           border: `1px solid ${colors.divider}`
         }}
@@ -211,39 +247,45 @@ const Groups = () => {
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <Group sx={{ color: colors.primary, mr: 1 }} />
-                    <Typography>{group.members} members</Typography>
+                    <Typography>{group.memberCount || 0} members</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Box>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <Event sx={{ fontSize: 16, mr: 1, color: colors.secondary }} />
-                      {group.upcomingEvents} upcoming events
+                      {group.upcomingEvents || 0} upcoming events
                     </Typography>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <Chat sx={{ fontSize: 16, mr: 1, color: colors.secondary }} />
-                      {group.recentDiscussions} discussions
+                      {group.recentDiscussions || 0} discussions
                     </Typography>
                     <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
                       <Work sx={{ fontSize: 16, mr: 1, color: colors.secondary }} />
-                      {group.jobPostings} job opportunities
+                      {group.jobPostings || 0} job opportunities
                     </Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Tooltip title="View Group">
-                    <IconButton sx={{ color: colors.primary }}>
+                    <IconButton sx={{ color: colors.primary }} onClick={() => handleViewGroup(group)}>
                       <Visibility />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Edit">
-                    <IconButton sx={{ color: colors.secondary }}>
+                    <IconButton sx={{ color: colors.secondary }} onClick={() => handleEditGroup(group)}>
                       <Edit />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete">
-                    <IconButton sx={{ color: '#d32f2f' }}>
+                    <IconButton sx={{ color: '#d32f2f' }} onClick={() => handleDeleteGroup(group.id)}>
                       <Delete />
+                    </IconButton>
+                  </Tooltip>
+                  {/* Join Group Icon */}
+                  <Tooltip title="Join Group">
+                    <IconButton sx={{ color: colors.secondary }} onClick={() => handleJoinGroup(group.id)}>
+                      <GroupAdd />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
@@ -253,12 +295,95 @@ const Groups = () => {
         </Table>
       </TableContainer>
 
+      {/* Create Group Modal */}
       <CreateGroup 
         open={openCreateGroup} 
         onClose={() => setOpenCreateGroup(false)} 
+        onAddGroup={handleAddGroup}
       />
+
+      {/* View Group Modal */}
+      {selectedGroup && (
+        <Dialog open={openViewGroup} onClose={handleCloseViewGroup}>
+          <DialogTitle>{selectedGroup.name}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ marginBottom: 2 }}>
+              <strong>Description:</strong> {selectedGroup.description}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Members:</strong> {selectedGroup.memberCount || 0}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Upcoming Events:</strong> {selectedGroup.upcomingEvents || 'None'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Recent Discussions:</strong> {selectedGroup.recentDiscussions || 'None'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Job Opportunities:</strong> {selectedGroup.jobPostings || 'None'}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseViewGroup}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Edit Group Modal */}
+      <Dialog open={openEditGroup} onClose={handleCloseEditGroup}>
+        <DialogTitle>Edit Group</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Upcoming Events"
+            variant="outlined"
+            value={upcomingEvents}
+            onChange={(e) => setUpcomingEvents(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Recent Discussions"
+            variant="outlined"
+            value={discussions}
+            onChange={(e) => setDiscussions(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Job Postings"
+            variant="outlined"
+            value={jobPostings}
+            onChange={(e) => setJobPostings(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditGroup}>Cancel</Button>
+          <Button onClick={handleSaveEdit}>Save</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
 export default Groups;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
