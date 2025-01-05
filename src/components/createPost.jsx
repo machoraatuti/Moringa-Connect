@@ -1,8 +1,7 @@
-// CreatePost.jsx
 import React, { useState } from 'react';
 import {
   Box, Typography, TextField, Button, Select, MenuItem,
-  IconButton
+  IconButton, Snackbar, Alert
 } from '@mui/material';
 import {
   Close, AddPhotoAlternate, Delete
@@ -25,6 +24,10 @@ const CreatePost = ({ onClose }) => {
     image: null
   });
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
   const categories = [
     'Technology',
     'Career',
@@ -41,6 +44,36 @@ const CreatePost = ({ onClose }) => {
         ...postData,
         image: URL.createObjectURL(file)
       });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!postData.title || !postData.content || !postData.category) {
+      setSnackbarMessage('Please fill out all required fields.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
+      });
+
+      if (!response.ok) throw new Error('Failed to create post');
+
+      setSnackbarMessage('Post published successfully!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setPostData({ title: '', content: '', category: '', tags: [], image: null });
+    } catch (error) {
+      setSnackbarMessage('An error occurred while publishing the post.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
@@ -158,6 +191,7 @@ const CreatePost = ({ onClose }) => {
           </Button>
           <Button
             variant="contained"
+            onClick={handleSubmit}
             sx={{
               bgcolor: colors.secondary,
               '&:hover': { bgcolor: colors.primary }
@@ -167,6 +201,16 @@ const CreatePost = ({ onClose }) => {
           </Button>
         </Box>
       </Box>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
