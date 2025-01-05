@@ -9,7 +9,8 @@ import Profile from '../pages/profile';
 import Posts from '../pages/Posts';
 import Groups from '../pages/Groups';
 import Users from '../components/Users';
-import Events from '../pages/Events';
+
+import AdminEvents from '../components/AdminEvents';
 
 const drawerWidth = 240;
 
@@ -175,7 +176,7 @@ const AdminDashboard = () => {
           {selectedTab === 'posts' && <Posts />}
           {selectedTab === 'groups' && <Groups />}
           {selectedTab === 'users' && <Users />}
-          {selectedTab === 'events' && <Events />}
+          {selectedTab === 'events' && <AdminEvents />}
         </Paper>
       </Box>
     </Box>

@@ -1,14 +1,12 @@
-// components/ProtectedAdminRoute.js
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 
 const moringaColors = {
   primary: "#0A1F44",
   secondary: "#F05A28",
-  background: "#FFF5F2",
-  white: "#FFFFFF"
+  background: "#FFF5F2"
 };
 
 const ProtectedAdminRoute = ({ children }) => {
@@ -24,45 +22,20 @@ const ProtectedAdminRoute = ({ children }) => {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
           bgcolor: moringaColors.background
         }}
       >
-        <CircularProgress 
-          size={40}
-          thickness={4}
-          sx={{ 
-            color: moringaColors.secondary,
-            mb: 2
-          }}
-        />
-        <Typography
-          variant="body1"
-          sx={{
-            color: moringaColors.primary,
-            fontWeight: 500
-          }}
-        >
-          Verifying credentials...
-        </Typography>
+        <CircularProgress sx={{ color: moringaColors.secondary }} />
       </Box>
     );
   }
 
   if (!verifyAdminStatus()) {
-    return (
-      <Navigate 
-        to="/login" 
-        state={{ 
-          from: location,
-          message: "Please log in with administrator credentials to access this area."
-        }} 
-        replace 
-      />
-    );
+    // Redirect to login with the current location saved
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;
