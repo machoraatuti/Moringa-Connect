@@ -59,8 +59,24 @@ export const addGroupToFirestore = async (groupData) => {
 // Update a group in Firestore
 export const updateGroupInFirestore = async (groupId, updatedGroup) => {
   try {
+    // Only send the fields that can be updated (avoid sending the groupId)
     const groupRef = doc(db, 'groups', groupId);
-    await updateDoc(groupRef, updatedGroup);
+    
+    // Update only the fields that were changed
+    const groupDataToUpdate = {
+      upcomingEvents: updatedGroup.upcomingEvents,
+      recentDiscussions: updatedGroup.recentDiscussions,
+      jobPostings: updatedGroup.jobPostings,
+    };
+
+    // Ensure no invalid fields are sent (like undefined or null values)
+    Object.keys(groupDataToUpdate).forEach(key => {
+      if (groupDataToUpdate[key] === undefined || groupDataToUpdate[key] === null) {
+        delete groupDataToUpdate[key];
+      }
+    });
+
+    await updateDoc(groupRef, groupDataToUpdate);
     console.log('Group updated successfully');
   } catch (error) {
     console.error('Error updating group:', error);

@@ -1,99 +1,141 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box, TableContainer, Table, TableHead, TableBody, 
-  TableRow, TableCell, Paper, IconButton, TextField, 
-  Tooltip, Typography, Button, Chip, Grid, Dialog, 
-  DialogContent
+import { 
+  Box, TableContainer, Table, TableHead, TableBody,
+  TableRow, TableCell, Paper, IconButton, TextField,
+  Tooltip, Typography, Button, Chip, Grid, Dialog, DialogActions, DialogContent, DialogTitle
 } from '@mui/material';
-import { Delete, Edit, Visibility, Group, Add, Work, Event, Chat } from '@mui/icons-material';
-import { useSelector, useDispatch } from 'react-redux';
-import { setGroups, addGroup, deleteGroup } from '../redux/groupsSlice';
-import {
-  fetchGroupsFromFirestore,
-  addGroupToFirestore,
-  updateGroupInFirestore,
-  deleteGroupFromFirestore,
-  joinGroupInFirestore
-} from '../firebase';
+import { 
+  Delete, Edit, Visibility, Group, Add,
+  Work, Event, Chat, GroupAdd
+} from '@mui/icons-material';
+import CreateGroup from '../components/CreateGroup';
+import { fetchGroupsFromFirestore, addGroupToFirestore, deleteGroupFromFirestore, updateGroupInFirestore } from '../firebase';
 
-
-const colors = { primary: '#0A1F44', secondary: '#F05A28', background: '#FFF5F2', white: '#FFFFFF', divider: 'rgba(240, 90, 40, 0.12)' };
+const colors = {
+  primary: '#0A1F44',
+  secondary: '#F05A28',
+  background: '#FFF5F2',
+  white: '#FFFFFF',
+  divider: 'rgba(240, 90, 40, 0.12)'
+};
 
 const Groups = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
-  const [openEditGroup, setOpenEditGroup] = useState(false);
   const [openViewGroup, setOpenViewGroup] = useState(false);
-  const [currentGroup, setCurrentGroup] = useState(null);
-  const dispatch = useDispatch();
-  const groups = useSelector((state) => state.groups.groups);
+  const [openEditGroup, setOpenEditGroup] = useState(false); // Modal state for editing group
+  const [selectedGroup, setSelectedGroup] = useState(null); // Store the selected group data
+  const [groups, setGroups] = useState([]); // Store groups fetched from Firestore
 
-  // Function to load groups from Firestore
-  const loadGroups = async () => {
-    try {
-      const fetchedGroups = await fetchGroupsFromFirestore();
-      dispatch(setGroups(fetchedGroups)); // Set groups in Redux state
-    } catch (error) {
-      console.error('Error fetching groups:', error);
-    }
-  };
+  const [upcomingEvents, setUpcomingEvents] = useState('');
+  const [discussions, setDiscussions] = useState('');
+  const [jobPostings, setJobPostings] = useState('');
 
+  // Fetch groups from Firestore when the component loads
   useEffect(() => {
-    loadGroups(); // Load groups when component mounts
-  }, []); // Empty dependency array to run only once
+    const loadGroups = async () => {
+      try {
+        const fetchedGroups = await fetchGroupsFromFirestore();
+        setGroups(fetchedGroups);
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+      }
+    };
 
-  const filteredGroups = groups.filter((group) =>
+    loadGroups();
+  }, []);
+
+  // Filter groups based on search term
+  const filteredGroups = groups.filter((group) => 
     group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     group.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Handle Join Group functionality
-  const handleJoinGroup = async (groupId) => {
-    try {
-      await joinGroupInFirestore(groupId); // Increment memberCount in Firestore
-      loadGroups(); // Reload groups to reflect the updated memberCount
-    } catch (error) {
-      console.error('Error joining group:', error);
-    }
-  };
-
+  // Add a new group and update Firestore
   const handleAddGroup = async (newGroup) => {
     try {
+      // Add new group to Firestore
       const savedGroup = await addGroupToFirestore(newGroup);
-      dispatch(addGroup(savedGroup)); // Update Redux state
+      setGroups((prevGroups) => [...prevGroups, savedGroup]);
     } catch (error) {
       console.error('Error adding group:', error);
     }
   };
 
-  const handleEditGroup = async (updatedGroup) => {
-    try {
-      await updateGroupInFirestore(updatedGroup.id, updatedGroup);
-      dispatch(setGroups(groups.map(group => group.id === updatedGroup.id ? updatedGroup : group))); // Update Redux state
-      setOpenEditGroup(false);
-    } catch (error) {
-      console.error('Error editing group:', error);
-    }
-  };
-
+  // Delete a group from Firestore
   const handleDeleteGroup = async (groupId) => {
     try {
+      // Delete group from Firestore
       await deleteGroupFromFirestore(groupId);
-      dispatch(deleteGroup(groupId)); // Remove group from Redux state
+      // Remove the group from the state
+      setGroups((prevGroups) => prevGroups.filter(group => group.id !== groupId));
     } catch (error) {
       console.error('Error deleting group:', error);
     }
   };
 
+  // Handle View Group click to open modal with group data
   const handleViewGroup = (group) => {
-    setCurrentGroup(group);
-    setOpenViewGroup(true);
+    setSelectedGroup(group);
+    setOpenViewGroup(true); // Open the modal
+  };
+
+  // Handle Edit Group click to open modal for editing
+  const handleEditGroup = (group) => {
+    setSelectedGroup(group);
+    setUpcomingEvents(group.upcomingEvents || '');
+    setDiscussions(group.recentDiscussions || '');
+    setJobPostings(group.jobPostings || '');
+    setOpenEditGroup(true); // Open the edit modal
+  };
+
+  // Save the edited group data
+  const handleSaveEdit = async () => {
+    try {
+      // Create the updated group data
+      const updatedGroup = {
+        ...selectedGroup,
+        upcomingEvents,
+        recentDiscussions: discussions,
+        jobPostings
+      };
+      
+      // Update the group in Firestore
+      await updateGroupInFirestore(updatedGroup.id, updatedGroup);
+      
+      // Update the group in the state by replacing the old data with the updated one
+      setGroups((prevGroups) => 
+        prevGroups.map((group) => 
+          group.id === updatedGroup.id ? updatedGroup : group
+        )
+      );
+  
+      // Close the edit modal
+      setOpenEditGroup(false);
+    } catch (error) {
+      console.error('Error saving edited group:', error);
+    }
+  };
+  
+
+  // Close View Group modal
+  const handleCloseViewGroup = () => {
+    setOpenViewGroup(false);
+    setSelectedGroup(null); // Clear the selected group
+  };
+
+  // Close Edit Group modal
+  const handleCloseEditGroup = () => {
+    setOpenEditGroup(false);
+    setSelectedGroup(null); // Clear the selected group
   };
 
   return (
     <Box p={3} sx={{ bgcolor: colors.background, minHeight: '100vh' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Typography variant="h4" sx={{ color: colors.primary, fontWeight: 600 }}>Alumni Groups</Typography>
+        <Typography variant="h4" sx={{ color: colors.primary, fontWeight: 600 }}>
+          Alumni Groups
+        </Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -131,7 +173,13 @@ const Groups = () => {
       </Box>
 
       {/* Groups Table */}
-      <TableContainer component={Paper} sx={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)', border: `1px solid ${colors.divider}` }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          border: `1px solid ${colors.divider}`
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: colors.primary }}>
@@ -144,22 +192,34 @@ const Groups = () => {
           </TableHead>
           <TableBody>
             {filteredGroups.map((group) => (
-              <TableRow key={group.id} sx={{ '&:hover': { bgcolor: colors.background } }}>
+              <TableRow 
+                key={group.id}
+                sx={{ '&:hover': { bgcolor: colors.background } }}
+              >
                 <TableCell>
                   <Box>
                     <Typography variant="subtitle1" sx={{ color: colors.primary, fontWeight: 600 }}>
                       {group.name}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">{group.description}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {group.description}
+                    </Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip label={group.category} size="small" sx={{ bgcolor: colors.secondary, color: colors.white }} />
+                  <Chip 
+                    label={group.category}
+                    size="small"
+                    sx={{ 
+                      bgcolor: colors.secondary,
+                      color: colors.white
+                    }}
+                  />
                 </TableCell>
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <Group sx={{ color: colors.primary, mr: 1 }} />
-                    <Typography>{group.memberCount || 0} members</Typography>
+                    <Typography>{group.members || 0} members</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
@@ -185,13 +245,7 @@ const Groups = () => {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Edit">
-                    <IconButton
-                      sx={{ color: colors.secondary }}
-                      onClick={() => {
-                        setCurrentGroup(group);
-                        setOpenEditGroup(true);
-                      }}
-                    >
+                    <IconButton sx={{ color: colors.secondary }} onClick={() => handleEditGroup(group)}>
                       <Edit />
                     </IconButton>
                   </Tooltip>
@@ -200,9 +254,10 @@ const Groups = () => {
                       <Delete />
                     </IconButton>
                   </Tooltip>
+                  {/* Join Group Icon */}
                   <Tooltip title="Join Group">
-                    <IconButton sx={{ color: colors.secondary }} onClick={() => handleJoinGroup(group.id)}>
-                      <Group />
+                    <IconButton sx={{ color: colors.secondary }}>
+                      <GroupAdd />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
@@ -213,83 +268,74 @@ const Groups = () => {
       </TableContainer>
 
       {/* Create Group Modal */}
-      <Dialog open={openCreateGroup} onClose={() => setOpenCreateGroup(false)} maxWidth="md" fullWidth>
-        <DialogContent>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>Create New Group</Typography>
-            <TextField
-              fullWidth
-              label="Group Name"
-              onChange={(e) => setCurrentGroup({ ...currentGroup, name: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Description"
-              onChange={(e) => setCurrentGroup({ ...currentGroup, description: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Category"
-              onChange={(e) => setCurrentGroup({ ...currentGroup, category: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <Button variant="contained" color="primary" onClick={() => handleAddGroup(currentGroup)}>
-              Create Group
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
+      <CreateGroup 
+        open={openCreateGroup} 
+        onClose={() => setOpenCreateGroup(false)} 
+        onAddGroup={handleAddGroup}
+      />
 
-      {/* Edit Group Modal */}
-      {currentGroup && (
-        <Dialog open={openEditGroup} onClose={() => setOpenEditGroup(false)} maxWidth="md" fullWidth>
+      {/* View Group Modal */}
+      {selectedGroup && (
+        <Dialog open={openViewGroup} onClose={handleCloseViewGroup}>
+          <DialogTitle>{selectedGroup.name}</DialogTitle>
           <DialogContent>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>Edit Group: {currentGroup.name}</Typography>
-              <TextField
-                fullWidth
-                label="Group Name"
-                value={currentGroup.name}
-                onChange={(e) => setCurrentGroup({ ...currentGroup, name: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Description"
-                value={currentGroup.description}
-                onChange={(e) => setCurrentGroup({ ...currentGroup, description: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Category"
-                value={currentGroup.category}
-                onChange={(e) => setCurrentGroup({ ...currentGroup, category: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <Button variant="contained" color="primary" onClick={() => handleEditGroup(currentGroup)}>
-                Save Changes
-              </Button>
-            </Box>
+            <Typography variant="body1" sx={{ marginBottom: 2 }}>
+              <strong>Description:</strong> {selectedGroup.description}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Members:</strong> {selectedGroup.members || 0}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Upcoming Events:</strong> {selectedGroup.upcomingEvents || 'None'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Recent Discussions:</strong> {selectedGroup.recentDiscussions || 'None'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Job Opportunities:</strong> {selectedGroup.jobPostings || 'None'}
+            </Typography>
           </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseViewGroup}>Close</Button>
+          </DialogActions>
         </Dialog>
       )}
 
-      {/* View Group Modal */}
-      {currentGroup && (
-        <Dialog open={openViewGroup} onClose={() => setOpenViewGroup(false)} maxWidth="md" fullWidth>
+      {/* Edit Group Modal */}
+      {selectedGroup && (
+        <Dialog open={openEditGroup} onClose={handleCloseEditGroup}>
+          <DialogTitle>Edit Group</DialogTitle>
           <DialogContent>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>View Group: {currentGroup.name}</Typography>
-              <Typography variant="body1">{currentGroup.description}</Typography>
-              <Typography variant="body2" sx={{ mt: 2 }}>
-                Category: <Chip label={currentGroup.category} size="small" sx={{ bgcolor: colors.secondary, color: colors.white }} />
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>Members: {currentGroup.memberCount}</Typography>
-            </Box>
+            <TextField
+              label="Upcoming Events"
+              fullWidth
+              variant="outlined"
+              value={upcomingEvents}
+              onChange={(e) => setUpcomingEvents(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Recent Discussions"
+              fullWidth
+              variant="outlined"
+              value={discussions}
+              onChange={(e) => setDiscussions(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Job Postings"
+              fullWidth
+              variant="outlined"
+              value={jobPostings}
+              onChange={(e) => setJobPostings(e.target.value)}
+            />
           </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseEditGroup}>Cancel</Button>
+            <Button onClick={handleSaveEdit} color="primary">
+              Save
+            </Button>
+          </DialogActions>
         </Dialog>
       )}
     </Box>
@@ -297,6 +343,11 @@ const Groups = () => {
 };
 
 export default Groups;
+
+
+
+
+
 
 
 
