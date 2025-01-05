@@ -1,66 +1,99 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, TableContainer, Table, TableHead, TableBody,
-  TableRow, TableCell, Paper, IconButton, TextField,
-  Tooltip, Typography, Button, Chip, Grid
+import {
+  Box, TableContainer, Table, TableHead, TableBody, 
+  TableRow, TableCell, Paper, IconButton, TextField, 
+  Tooltip, Typography, Button, Chip, Grid, Dialog, 
+  DialogContent
 } from '@mui/material';
-import { 
-  Delete, Edit, Visibility, Group, Add,
-  Work, Event, Chat
-} from '@mui/icons-material';
-import CreateGroup from '../components/CreateGroup';
-import { fetchGroupsFromFirestore, addGroupToFirestore } from '../firebase';
+import { Delete, Edit, Visibility, Group, Add, Work, Event, Chat } from '@mui/icons-material';
+import { useSelector, useDispatch } from 'react-redux';
+import { setGroups, addGroup, deleteGroup } from '../redux/groupsSlice';
+import {
+  fetchGroupsFromFirestore,
+  addGroupToFirestore,
+  updateGroupInFirestore,
+  deleteGroupFromFirestore,
+  joinGroupInFirestore
+} from '../firebase';
 
-const colors = {
-  primary: '#0A1F44',
-  secondary: '#F05A28',
-  background: '#FFF5F2',
-  white: '#FFFFFF',
-  divider: 'rgba(240, 90, 40, 0.12)'
-};
+
+const colors = { primary: '#0A1F44', secondary: '#F05A28', background: '#FFF5F2', white: '#FFFFFF', divider: 'rgba(240, 90, 40, 0.12)' };
 
 const Groups = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
-  const [groups, setGroups] = useState([]); // Store groups fetched from Firestore
+  const [openEditGroup, setOpenEditGroup] = useState(false);
+  const [openViewGroup, setOpenViewGroup] = useState(false);
+  const [currentGroup, setCurrentGroup] = useState(null);
+  const dispatch = useDispatch();
+  const groups = useSelector((state) => state.groups.groups);
 
-  // Fetch groups from Firestore when the component loads
+  // Function to load groups from Firestore
+  const loadGroups = async () => {
+    try {
+      const fetchedGroups = await fetchGroupsFromFirestore();
+      dispatch(setGroups(fetchedGroups)); // Set groups in Redux state
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
+
   useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        const fetchedGroups = await fetchGroupsFromFirestore();
-        setGroups(fetchedGroups);
-      } catch (error) {
-        console.error('Error fetching groups:', error);
-      }
-    };
+    loadGroups(); // Load groups when component mounts
+  }, []); // Empty dependency array to run only once
 
-    loadGroups();
-  }, []);
-
-  // Filter groups based on search term
-  const filteredGroups = groups.filter((group) => 
+  const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     group.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Add a new group and update Firestore
+  // Handle Join Group functionality
+  const handleJoinGroup = async (groupId) => {
+    try {
+      await joinGroupInFirestore(groupId); // Increment memberCount in Firestore
+      loadGroups(); // Reload groups to reflect the updated memberCount
+    } catch (error) {
+      console.error('Error joining group:', error);
+    }
+  };
+
   const handleAddGroup = async (newGroup) => {
     try {
-      // Add new group to Firestore
       const savedGroup = await addGroupToFirestore(newGroup);
-      setGroups((prevGroups) => [...prevGroups, savedGroup]);
+      dispatch(addGroup(savedGroup)); // Update Redux state
     } catch (error) {
       console.error('Error adding group:', error);
     }
   };
 
+  const handleEditGroup = async (updatedGroup) => {
+    try {
+      await updateGroupInFirestore(updatedGroup.id, updatedGroup);
+      dispatch(setGroups(groups.map(group => group.id === updatedGroup.id ? updatedGroup : group))); // Update Redux state
+      setOpenEditGroup(false);
+    } catch (error) {
+      console.error('Error editing group:', error);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    try {
+      await deleteGroupFromFirestore(groupId);
+      dispatch(deleteGroup(groupId)); // Remove group from Redux state
+    } catch (error) {
+      console.error('Error deleting group:', error);
+    }
+  };
+
+  const handleViewGroup = (group) => {
+    setCurrentGroup(group);
+    setOpenViewGroup(true);
+  };
+
   return (
     <Box p={3} sx={{ bgcolor: colors.background, minHeight: '100vh' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Typography variant="h4" sx={{ color: colors.primary, fontWeight: 600 }}>
-          Alumni Groups
-        </Typography>
+        <Typography variant="h4" sx={{ color: colors.primary, fontWeight: 600 }}>Alumni Groups</Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -98,13 +131,7 @@ const Groups = () => {
       </Box>
 
       {/* Groups Table */}
-      <TableContainer
-        component={Paper}
-        sx={{
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          border: `1px solid ${colors.divider}`
-        }}
-      >
+      <TableContainer component={Paper} sx={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)', border: `1px solid ${colors.divider}` }}>
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: colors.primary }}>
@@ -117,34 +144,22 @@ const Groups = () => {
           </TableHead>
           <TableBody>
             {filteredGroups.map((group) => (
-              <TableRow 
-                key={group.id}
-                sx={{ '&:hover': { bgcolor: colors.background } }}
-              >
+              <TableRow key={group.id} sx={{ '&:hover': { bgcolor: colors.background } }}>
                 <TableCell>
                   <Box>
                     <Typography variant="subtitle1" sx={{ color: colors.primary, fontWeight: 600 }}>
                       {group.name}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {group.description}
-                    </Typography>
+                    <Typography variant="body2" color="textSecondary">{group.description}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip 
-                    label={group.category}
-                    size="small"
-                    sx={{ 
-                      bgcolor: colors.secondary,
-                      color: colors.white
-                    }}
-                  />
+                  <Chip label={group.category} size="small" sx={{ bgcolor: colors.secondary, color: colors.white }} />
                 </TableCell>
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <Group sx={{ color: colors.primary, mr: 1 }} />
-                    <Typography>{group.members || 0} members</Typography>
+                    <Typography>{group.memberCount || 0} members</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
@@ -165,18 +180,29 @@ const Groups = () => {
                 </TableCell>
                 <TableCell>
                   <Tooltip title="View Group">
-                    <IconButton sx={{ color: colors.primary }}>
+                    <IconButton sx={{ color: colors.primary }} onClick={() => handleViewGroup(group)}>
                       <Visibility />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Edit">
-                    <IconButton sx={{ color: colors.secondary }}>
+                    <IconButton
+                      sx={{ color: colors.secondary }}
+                      onClick={() => {
+                        setCurrentGroup(group);
+                        setOpenEditGroup(true);
+                      }}
+                    >
                       <Edit />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete">
-                    <IconButton sx={{ color: '#d32f2f' }}>
+                    <IconButton sx={{ color: '#d32f2f' }} onClick={() => handleDeleteGroup(group.id)}>
                       <Delete />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Join Group">
+                    <IconButton sx={{ color: colors.secondary }} onClick={() => handleJoinGroup(group.id)}>
+                      <Group />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
@@ -187,14 +213,100 @@ const Groups = () => {
       </TableContainer>
 
       {/* Create Group Modal */}
-      <CreateGroup 
-        open={openCreateGroup} 
-        onClose={() => setOpenCreateGroup(false)} 
-        onAddGroup={handleAddGroup}
-      />
+      <Dialog open={openCreateGroup} onClose={() => setOpenCreateGroup(false)} maxWidth="md" fullWidth>
+        <DialogContent>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>Create New Group</Typography>
+            <TextField
+              fullWidth
+              label="Group Name"
+              onChange={(e) => setCurrentGroup({ ...currentGroup, name: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Description"
+              onChange={(e) => setCurrentGroup({ ...currentGroup, description: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Category"
+              onChange={(e) => setCurrentGroup({ ...currentGroup, category: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <Button variant="contained" color="primary" onClick={() => handleAddGroup(currentGroup)}>
+              Create Group
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Group Modal */}
+      {currentGroup && (
+        <Dialog open={openEditGroup} onClose={() => setOpenEditGroup(false)} maxWidth="md" fullWidth>
+          <DialogContent>
+            <Box sx={{ p: 3 }}>
+              <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>Edit Group: {currentGroup.name}</Typography>
+              <TextField
+                fullWidth
+                label="Group Name"
+                value={currentGroup.name}
+                onChange={(e) => setCurrentGroup({ ...currentGroup, name: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Description"
+                value={currentGroup.description}
+                onChange={(e) => setCurrentGroup({ ...currentGroup, description: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Category"
+                value={currentGroup.category}
+                onChange={(e) => setCurrentGroup({ ...currentGroup, category: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <Button variant="contained" color="primary" onClick={() => handleEditGroup(currentGroup)}>
+                Save Changes
+              </Button>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* View Group Modal */}
+      {currentGroup && (
+        <Dialog open={openViewGroup} onClose={() => setOpenViewGroup(false)} maxWidth="md" fullWidth>
+          <DialogContent>
+            <Box sx={{ p: 3 }}>
+              <Typography variant="h5" sx={{ color: colors.primary, fontWeight: 600 }}>View Group: {currentGroup.name}</Typography>
+              <Typography variant="body1">{currentGroup.description}</Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                Category: <Chip label={currentGroup.category} size="small" sx={{ bgcolor: colors.secondary, color: colors.white }} />
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>Members: {currentGroup.memberCount}</Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
     </Box>
   );
 };
 
 export default Groups;
+
+
+
+
+
+
+
+
+
+
+
+
 
