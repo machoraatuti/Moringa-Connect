@@ -109,14 +109,3 @@ export const joinGroupInFirestore = async (groupId) => {
     throw error;
   }
 };
-
-
-
-
-
-
-
-
-
-
-

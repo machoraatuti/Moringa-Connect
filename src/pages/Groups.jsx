@@ -9,7 +9,7 @@ import {
   Work, Event, Chat, GroupAdd
 } from '@mui/icons-material';
 import CreateGroup from '../components/CreateGroup';
-import { fetchGroupsFromFirestore, addGroupToFirestore, deleteGroupFromFirestore, updateGroupInFirestore, joinGroupInFirestore, fetchGroupMembers } from '../firebase'; // Updated import
+import { fetchGroupsFromFirestore, addGroupToFirestore, deleteGroupFromFirestore, updateGroupInFirestore, joinGroupInFirestore, fetchGroupMembers } from '../firebaseConfig'; // Updated import
 
 const colors = {
   primary: '#0A1F44',
